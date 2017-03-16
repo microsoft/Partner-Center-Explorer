@@ -1,0 +1,25 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.CustomerModel
+
+<tr id="@Model.CustomerId">
+    <td>
+        @Html.ActionLink(Model.CompanyProfile.CompanyName, $"{Model.CustomerId}/Show", "Customers")
+    </td>
+    <td>
+        @Html.DisplayFor(item => item.CompanyProfile.Domain)
+    </td>
+    <td>
+        @Html.DisplayFor(item => item.RelationshipToPartner)
+    </td>
+    @if (false)
+    {
+        <td>
+            @Ajax.RouteLink("Delete", new { action = "Delete", controller = "Customers", customerId = Model.CustomerId },
+                            new AjaxOptions()
+                            {
+                                HttpMethod = "Delete",
+                                Confirm = $"Are you sure you want to delete {Model.CompanyProfile.CompanyName}?",
+                                OnComplete = $"OnSuccessCallback('{Model.CustomerId}')"
+                            })
+        </td>
+    }
+</tr>

@@ -1,0 +1,68 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.InvoiceDetailsModel
+@using Microsoft.Store.PartnerCenter.Models.Invoices
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Customer Name</th>
+            <th>Charge Start Date</th>
+            <th>Charge End Date</th>
+            <th>Charge Type</th>
+            <th>List Price</th>
+            <th>Included Quantity</th>
+            <th>Overage Quantity</th>
+            <th>Region</th>
+            <th>Resource GUID</th>
+            <th>Resource Name</th>
+            <th>Service Name</th>
+            <th>Service Type</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    @foreach (InvoiceLineItem lineItem in Model.InvoiceLineItems)
+    {
+        UsageBasedLineItem element = (UsageBasedLineItem)lineItem;
+
+        <tr>
+            <td>
+                @Html.DisplayFor(item => element.CustomerCompanyName)
+            </td>
+            <td>
+                @Html.DisplayFor(item => element.ChargeStartDate)
+            </td>
+            <td>
+                @Html.DisplayFor(item => element.ChargeEndDate)
+            </td>
+            <td>
+                @Html.DisplayFor(item => element.ChargeType)
+            </td>
+            <td>
+                @Html.DisplayFor(item => element.ListPrice)
+            </td>
+            <td>
+                @Html.DisplayFor(item => element.IncludedQuantity)
+            </td>
+            <td>
+                @Html.DisplayFor(item => element.OverageQuantity)
+            </td>
+            <td>
+                @Html.DisplayFor(item => element.Region)
+            </td>
+            <th>
+                @Html.DisplayFor(item => element.ResourceGuid)
+            </th>
+            <th>
+                @Html.DisplayFor(item => element.ResourceName)
+            </th>
+            <th>
+                @Html.DisplayFor(item => element.ServiceName)
+            </th>
+            <th>
+                @Html.DisplayFor(item => element.ServiceType)
+            </th>
+            <th>
+                @Html.DisplayFor(item => element.PostTaxTotal)
+            </th>
+        </tr>
+    }
+</table>

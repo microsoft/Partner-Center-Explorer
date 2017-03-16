@@ -1,0 +1,120 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.SubscriptionModel
+@using Microsoft.Store.PartnerCenter.Models.Subscriptions
+
+@{
+    ViewBag.Title = "Subscriptions";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Breadcrumbs{
+    <ol class="breadcrumb navbar-breadcrumb">
+        <li><a href="/Customers">Customers</a></li>
+        <li><a href="/Customers/@Model.CustomerId/Show">@Model.CompanyName</a></li>
+        <li>Subscriptions</li>
+        <li class="active">@Model.FriendlyName</li>
+    </ol>
+}
+
+<div class="side-body padding-top">
+    <div class="row">
+        <div class="col-md-6 col-sm-12">
+            <h4>Details</h4>
+            <table class="table table-striped">
+                <tr>
+                    <th>Subscription Identifier</th>
+                    <td>@Html.DisplayFor(item => item.Id)</td>
+                </tr>
+                <tr>
+                    <th>Billing Type</th>
+                    <td>@Html.DisplayFor(item => item.BillingType)</td>
+                </tr>
+                <tr>
+                    <th>Creation Date</th>
+                    <td>@Html.DisplayFor(item => item.CreationDate)</td>
+                </tr>
+                <tr>
+                    <th>Effective Start Date</th>
+                    <td>@Html.DisplayFor(item => item.EffectiveStartDate)</td>
+                </tr>
+                <tr>
+                    <th>Commitment End Date</th>
+                    <td>@Html.DisplayFor(item => item.CommitmentEndDate)</td>
+                </tr>
+                <tr>
+                    <th>Auto Renew Enabled</th>
+                    <td>@(Model.AutoRenewEnabled.ToString())</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    @using (Ajax.BeginForm("Edit", "Subscriptions", new AjaxOptions { HttpMethod = "POST", OnSuccess = "OnSuccessCallback" }))
+    {
+        <fieldset>
+            <div class="row">
+                <div class="col-md-6 col-sm-12">
+                    <h4>Settings</h4>
+                    <hr />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 col-sm-12">
+                    <table style="width: 100%">
+                        <tr>
+                            <td>
+                                @Html.LabelFor(item => item.FriendlyName)
+                                @Html.TextBoxFor(item => item.FriendlyName, new { @class = "form-control" })
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                @Html.LabelFor(item => item.Quantity)
+                                @Html.TextBoxFor(item => item.Quantity, new { @class = "form-control" })
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                @Html.LabelFor(item => item.Status)
+                                <div class="btn-group" data-toggle="buttons-radio">
+                                    <label class="btn">
+                                        @Html.RadioButtonFor(item => item.Status, SubscriptionStatus.Active, new { id = "Status" })
+                                        Active
+                                    </label>
+                                    <label class="btn">
+                                        @Html.RadioButtonFor(item => item.Status, SubscriptionStatus.Suspended, new { id = "Status" })
+                                        Suspended
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div>
+                                    <button type="button" class="btn btn-default">
+                                        Cancel
+                                    </button>
+                                    <button type="submit" id="approve-btn"
+                                            class="btn btn-danger">
+                                        Submit
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div>
+                @Html.HiddenFor(item => item.CustomerId)
+                @Html.HiddenFor(item => item.Id)
+            </div>
+        </fieldset>
+    }
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        function OnSuccessCallback() {
+            window.location.href = "/Customers/@Model.CustomerId/Show"
+        }
+    </script>
+}

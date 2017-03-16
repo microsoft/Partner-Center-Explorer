@@ -1,0 +1,45 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title</title>
+    @Styles.Render("~/Content/css")
+</head>
+<body class="flat-blue">
+    <div class="app-container">
+        <div class="row content-container">
+            <nav class="navbar navbar-default navbar-fixed-top navbar-top">
+                <div class="container-fluid">
+                    <div class="navbar-header">
+                        <h2>An error has occurred...</h2>
+                    </div>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li class="dropdown profile">
+                            @Html.Partial("_LoginPartial")
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="side-body padding-top">
+                <p style="color:red">@ViewBag.ErrorMessage</p>
+            </div>
+        </div>
+    </div>
+    <footer class="app-footer">
+        <div class="wrapper">
+            &copy; @DateTime.Now.Year - Microsoft
+        </div>
+    </footer>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/jqueryui")
+    @Scripts.Render("~/bundles/bootstrap")
+    <script type="text/javascript" src="~/Scripts/application.js"></script>
+</body>
+</html>

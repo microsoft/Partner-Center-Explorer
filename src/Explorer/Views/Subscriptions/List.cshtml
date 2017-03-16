@@ -1,0 +1,14 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.SubscriptionsModel
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Identifier</th>
+            <th>Status</th>
+            <th></th>
+            <th></th>
+        </tr>
+    </thead>
+    @Html.EditorFor(item => item.Subscriptions)
+</table>

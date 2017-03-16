@@ -1,0 +1,25 @@
+﻿@using System.Security.Claims;
+
+@if (Request.IsAuthenticated)
+{
+
+    string name = ((ClaimsIdentity)User.Identity).FindFirst("Name").Value;
+    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">@name<span class="caret"></span></a>
+    <ul class="dropdown-menu animated fadeInDown">
+        <li>
+            <div class="profile-info">
+                <h4 class="username">@name</h4>
+                <p>@User.Identity.Name</p>
+                <div class="btn-group margin-bottom-2x" role="group">
+                    <i class="fa fa-sign-out">@Html.ActionLink("Sign out", "SignOut", "Account")</i>
+                </div>
+            </div>
+        </li>
+    </ul>
+}
+else
+{
+    <ul class="nav navbar-nav">
+        <li>@Html.ActionLink("Sign in", "SignIn", "Account", routeValues: null, htmlAttributes: new { id = "loginLink" })</li>
+    </ul>
+}

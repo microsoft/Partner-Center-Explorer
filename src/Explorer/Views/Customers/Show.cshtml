@@ -1,0 +1,80 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.CustomerModel
+
+@{
+    ViewBag.Title = "Customers";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Breadcrumbs{
+    <ol class="breadcrumb navbar-breadcrumb">
+        <li><a href="/Customers">Customers</a></li>
+        <li class="active">@Model.CompanyName</li>
+    </ol>
+}
+
+<div class="side-body padding-top">
+    <div id="modal-container" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-content"></div>
+    </div>
+    <div id="modal-nested-container" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-content">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 col-sm-12">
+            <h4>Billing Profile</h4>
+            <hr />
+            @Html.DisplayFor(item => item.BillingProfile.FirstName) @Html.DisplayFor(item => item.BillingProfile.LastName)
+            <br />
+            @Html.DisplayFor(item => item.BillingProfile.Email)
+            <br />
+            @Html.DisplayFor(item => item.BillingProfile.DefaultAddress.AddressLine1)
+            <br />
+            @Html.DisplayFor(item => item.BillingProfile.DefaultAddress.City),
+            @Html.DisplayFor(item => item.BillingProfile.DefaultAddress.State)
+            @Html.DisplayFor(item => item.BillingProfile.DefaultAddress.PostalCode)
+        </div>
+        <div class="col-md-6 col-sm-12">
+            <h4>Company Profile</h4>
+            <hr />
+            @Html.DisplayFor(item => item.CompanyProfile.CompanyName)
+            <br />
+            Domain Name: @Html.DisplayFor(item => item.CompanyProfile.Domain)
+            <br />
+            Microsoft ID: @Html.DisplayFor(item => item.CompanyProfile.TenantId)
+        </div>
+    </div>
+    <h4>Subscriptions</h4>
+    <hr />
+    <div class="row">
+        <div class="col-md-4 col-sm-8">
+            <a href="/Customers/@Model.CustomerId/Subscriptions/Create" id="lnkNewSubscription">New Subscription</a>
+        </div>
+    </div>
+    <div id="subscriptions" style="display: none;"></div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $.get('/Customers/@Model.CustomerId/Subscriptions/List', function (data) {
+                $('#subscriptions').html(data);
+                $('#subscriptions').fadeIn('fast');
+            });
+        });
+
+        $(document).on('hidden.bs.modal', function (e) {
+            $(e.target).removeData('bs.modal').find(".modal-content").empty();
+        });
+
+        $("#lnkNewSubscription").click(function (e) {
+            e.preventDefault();
+            $(this).attr('data-target', '#modal-container');
+            $(this).attr('data-toggle', 'modal');
+        });
+
+        function OnSuccessCallback() {
+            $('#modal-container').modal('hide');
+        }
+    </script>
+}

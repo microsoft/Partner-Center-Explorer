@@ -1,0 +1,52 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.AuditSearchModel
+
+@{
+    ViewBag.Title = "Audit Log";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Breadcrumbs{
+    <ol class="breadcrumb navbar-breadcrumb">
+        <li class="active">Audit Log</li>
+    </ol>
+}
+
+@section Scripts {
+    <script type="text/javascript">
+        $(function () {
+            $('.datepicker').datepicker();
+        });
+
+        $('#btnSearch').click(function () {
+            var endDate = $('#EndDate').val();
+            var startDate = $('#StartDate').val();
+
+            $.get('/Audit/GetRecords?StartDate=' + encodeURIComponent(startDate) + '&EndDate=' + encodeURIComponent(endDate), function (data) {
+                $('#records').html(data);
+                $('#records').fadeIn('fast');
+            });
+        });
+    </script>
+}
+
+<div class="side-body padding-top">
+    <table>
+        <tr>
+            <td>
+                from
+                @Html.TextBoxFor(model => Model.StartDate, new { @class = "form-control datepicker", placeholder = "Enter start date..." })
+            </td>
+            <td style="padding-left: 20px;">
+                to
+                @Html.TextBoxFor(item => Model.EndDate, new { @class = "form-control datepicker", placeholder = "Enter end date here..." })
+            </td>
+            <td style="padding-left: 20px; padding-top: 20px;">
+                <a class="btn btn-default" id="btnSearch" href="#">Search</a>
+            </td>
+        </tr>
+    </table>
+    <br />
+    <div class="row">
+        <div id="records" style="display: none;"></div>
+    </div>
+</div>

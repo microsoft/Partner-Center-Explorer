@@ -1,0 +1,34 @@
+﻿@{
+    ViewBag.Title = "Automation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Breadcrumbs{
+    <ol class="breadcrumb navbar-breadcrumb">
+        <li>Automation</li>
+    </ol>
+}
+
+<div class="side-body padding-top">
+    <div id="modal-container" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-content">
+        </div>
+    </div>
+    <div id="runbooks" style="display: none;"></div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $.get('/Automation/List',
+                function (data) {
+                    $('#runbooks').html(data);
+                    $('#runbooks').fadeIn('fast');
+                });
+        });
+
+        //function OnSuccessCallback() {
+        //    $('#modal-container').modal('hide');
+        //}
+    </script>
+}

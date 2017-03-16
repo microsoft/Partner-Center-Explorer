@@ -1,0 +1,25 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.UsersModel
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Display Name</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Last Directory Sync Time</th>
+            <th>Usage Location</th>
+            <th>User Principal Name</th>
+            <th></th>
+            <th></th>
+        </tr>
+    </thead>
+    @Html.EditorFor(item => item.Users)
+</table>
+
+<script type="text/javascript">
+    $(".lnkEditUser").click(function (e) {
+        e.preventDefault();
+        $(this).attr('data-target', '#modal-container');
+        $(this).attr('data-toggle', 'modal');
+    });
+</script>

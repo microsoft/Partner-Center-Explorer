@@ -1,0 +1,34 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.UserModel
+
+<tr id="@Model.Id">
+    <td>
+        @Html.DisplayFor(item => item.DisplayName)
+    </td>
+    <td>
+        @Html.DisplayFor(item => item.FirstName)
+    </td>
+    <td>
+        @Html.DisplayFor(item => item.LastName)
+    </td>
+    <td>
+        @Html.DisplayFor(item => item.LastDirectorySyncTime)
+    </td>
+    <td>
+        @Html.DisplayFor(item => item.UsageLocation)
+    </td>
+    <td>
+        @Html.DisplayFor(item => item.UserPrincipalName)
+    </td>
+    <td>
+        <a class="lnkEditUser" href="/Customers/@Model.CustomerId/Users/@Model.Id/Edit" id="EditUser">Edit</a>
+    </td>
+    <td>
+        @Ajax.RouteLink("Delete", new { action = "Delete", controller = "Users", customerId = Model.CustomerId, userId = Model.Id },
+            new AjaxOptions()
+            {
+                HttpMethod = "Delete",
+                Confirm = $"Are you sure you want to delete the user {Model.DisplayName}?",
+                OnSuccess = $"OnUserDeleteCallback('{Model.Id}')",
+            })
+    </td>
+</tr>

@@ -1,0 +1,62 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.UsageModel
+
+@{
+    ViewBag.Title = "View Usage";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Breadcrumbs{
+    <ol class="breadcrumb navbar-breadcrumb">
+        <li>Customers</li>
+        <li><a href="/Customers/@Model.CustomerId/Show">@Model.CompanyName</a></li>
+        <li>Subscription</li>
+        <li><a href="/Customers/@Model.CustomerId/Subscriptions/@Model.SubscriptionId/Show">@Model.SubscriptionFriendlyName</a></li>
+        <li class="active">Usage</li>
+    </ol>
+}
+
+<div class="side-body padding-top">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Location</th>
+                <th>Resource URI</th>
+                <th>Tags</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Quantity</th>
+                <th>Unit</th>
+            </tr>
+        </thead>
+        @foreach (Microsoft.Store.PartnerCenter.Models.Utilizations.AzureUtilizationRecord record in Model.Usage)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(item => record.Resource.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => record.InstanceData.Location)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => record.InstanceData.ResourceUri)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => record.InstanceData.Tags)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => record.UsageStartTime)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => record.UsageEndTime)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => record.Quantity)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => record.Unit)
+                </td>
+            </tr>
+        }
+    </table>
+</div>

@@ -1,0 +1,26 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.ServiceRequestsModel
+
+@{
+    ViewBag.Title = "Service Requests";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Breadcrumbs{
+    <ol class="breadcrumb navbar-breadcrumb">
+        <li>Service Requests</li>
+    </ol>
+}
+
+<div class="side-body padding-top">
+    <div id="requests"></div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        $.get('/ServiceRequests/List',
+            function (data) {
+                $('#requests').html(data);
+                $('#requests').fadeIn('fast');
+            });
+    </script>
+}

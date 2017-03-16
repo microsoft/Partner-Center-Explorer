@@ -1,0 +1,46 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.SubscriptionHealthModel
+
+@{
+    ViewBag.Title = "Health";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Breadcrumbs{
+    <ol class="breadcrumb navbar-breadcrumb">
+        <li>Customers</li>
+        <li><a href="/Customers/@Model.CustomerId/Show">@Model.CompanyName</a></li>
+        <li>Subscriptions</li>
+        <li><a href="/Customers/@Model.CustomerId/Subscriptions/@Model.SubscriptionId">@Model.FriendlyName</a></li>
+        <li class="active">Health</li>
+    </ol>
+}
+
+<div class="side-body padding-top">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Identifier</th>
+                <th>Status</th>
+                <th>Time</th>
+                <th>Workload</th>
+            </tr>
+        </thead>
+        @foreach (Microsoft.Store.PartnerCenter.Explorer.Logic.Office.OfficeHealthEvent d in Model.HealthEvents)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(item => d.Id)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => d.Status)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => d.StatusTime)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => d.WorkloadDisplayName)
+                </td>
+            </tr>
+        }
+    </table>
+</div>

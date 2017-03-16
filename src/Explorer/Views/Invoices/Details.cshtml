@@ -1,0 +1,95 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.InvoiceDetailsModel
+
+@{
+    ViewBag.Title = "Invoice Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Breadcrumbs{
+    <ol class="breadcrumb navbar-breadcrumb">
+        <li><a href="/Invoices">Invoices</a></li>
+        <li>@Model.InvoiceId</li>
+        <li class="active">Details</li>
+    </ol>
+}
+
+@section Scripts {
+    <script type="text/javascript">
+        var ddlCustomers = $('#ddlCustomers')
+
+        $.ajax({
+            cache: true,
+            data: { invoiceId: '@Model.InvoiceId' },
+            type: 'GET',
+            url: '@Url.Action("GetCustomers")',
+            success: function (data) {
+                ddlCustomers.html('');
+                $.each(data, function (id, option) {
+                    ddlCustomers.append($('<option></option>').val(option).html(option));
+                })
+
+                var customerName = $('#ddlCustomers').find(":selected").text();
+                var provider = $('#ddlProviderTypes').find(":selected").text();
+
+                $.get('/Invoices/@Model.InvoiceId/' + customerName + '/' + provider + 'Details', function (data) {
+                    $('#details').html(data);
+                    $('#details').fadeIn('fast');
+                });
+            }
+        });
+
+        $('#btnExport').click(function () {
+            var customerName = $('#ddlCustomers').find(":selected").text();
+            var provider = $('#ddlProviderTypes').find(":selected").text();
+
+            window.location = '@Url.Action("/")' + customerName + '/ExportCustomer?providerType=' + provider
+        });
+
+        $('#ddlCustomers').change(function () {
+            var value = $(this).val();
+            var provider = $('#ddlProviderTypes').find(":selected").text();
+
+            $.get('/Invoices/@Model.InvoiceId/' + value + '/' + provider + 'Details', function (data) {
+                $('#details').html(data);
+                $('#details').fadeIn('fast');
+            });
+        });
+
+        $('#ddlProviderTypes').change(function () {
+            var value = $(this).val();
+            var customerName = $('#ddlCustomers').find(":selected").text();
+
+            $.get('/Invoices/@Model.InvoiceId/' + customerName + '/' + value + 'Details', function (data) {
+                $('#details').html(data);
+                $('#details').fadeIn('fast');
+            });
+        });
+    </script>
+}
+
+<div class="side-body padding-top">
+    <table>
+        <tr>
+            <td>
+                <h5>Select Customer</h5>
+                <select id="ddlCustomers" class="form-control">
+                    <option>Loading...</option>
+                </select>
+            </td>
+            <td style="padding-left: 20px;">
+                <h5>Select Type</h5>
+                <select id="ddlProviderTypes" class="form-control">
+                    <option>Azure</option>
+                    <option>Office</option>
+                </select>
+            </td>
+            <td style="padding-left: 20px; padding-top: 30px;">
+                <a class="btn btn-default" id="btnExport" href="#">Export</a>
+            </td>
+        </tr>
+    </table>
+    <br />
+    <div class="row">
+        <div id="details" style="display: none;"></div>
+    </div>
+</div>

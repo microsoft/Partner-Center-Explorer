@@ -1,0 +1,62 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.SubscriptionHealthModel
+
+@{
+    ViewBag.Title = "Health";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Breadcrumbs{
+    <ol class="breadcrumb navbar-breadcrumb">
+        <li>Customers</li>
+        <li><a href="/Customers/@Model.CustomerId/Show">@Model.CompanyName</a></li>
+        <li>Subscriptions</li>
+        <li><a href="/Customers/@Model.CustomerId/Subscriptions/@Model.SubscriptionId">@Model.FriendlyName</a></li>
+        <li class="active">Health</li>
+    </ol>
+}
+
+<div class="side-body padding-top">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Time</th>
+                <th>Event Type</th>
+                <th>Resource Group Name</th>
+                <th>Resource Identifier</th>
+                <th>Resource Provider Name</th>
+                <th>Resource Type</th>
+                <th>Staus</th>
+            </tr>
+        </thead>
+        @foreach (Microsoft.Store.PartnerCenter.Explorer.Logic.Azure.AzureHealthEvent d in Model.HealthEvents)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(item => d.Description)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => d.EventTimestamp)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => d.EventType)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => d.ResourceGroupName)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => d.ResourceId)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => d.ResourceProviderName)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => d.ResourceType)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => d.Status)
+                </td>
+            </tr>
+        }
+    </table>
+</div>

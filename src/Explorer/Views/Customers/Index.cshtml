@@ -1,0 +1,53 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.CustomersModel
+
+@{
+    ViewBag.Title = "Customers";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Breadcrumbs{
+    <ol class="breadcrumb navbar-breadcrumb">
+        <li>Customers</li>
+    </ol>
+}
+
+<div class="side-body padding-top">
+    <div id="dialog-newCustomer" style="display: none"></div>
+
+    <div id="modal-container" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-content">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 col-sm-8">
+            <a class="lnkNewCustomer" href="/Customers/Create" id="NewCustomer">New Customer</a>
+        </div>
+    </div>
+    <div id="customers"></div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        function OnSuccessCallback(data) {
+            $('#' + data).remove();
+        }
+
+        $.get('/Customers/List', function (data) {
+            $('#customers').html(data);
+            $('#customers').fadeIn('fast');
+        });
+
+        $(".lnkNewCustomer")
+            .click(function (e) {
+                e.preventDefault();
+                $(this).attr('data-target', '#modal-container');
+                $(this).attr('data-toggle', 'modal');
+            });
+
+        $(document)
+            .on('hidden.bs.modal',
+                function (e) {
+                    $(e.target).removeData('bs.modal').find(".modal-content").empty();
+                });
+    </script>
+}

@@ -1,0 +1,46 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.InvoicesModel
+@using Microsoft.Store.PartnerCenter.Models.Invoices
+
+@{
+    ViewBag.Title = "Invoices";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Breadcrumbs{
+    <ol class="breadcrumb navbar-breadcrumb">
+        <li>Invoices</li>
+    </ol>
+}
+
+<div class="side-body padding-top">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Identifier</th>
+                <th>Total Charges</th>
+                <th></th>
+            </tr>
+        </thead>
+        @foreach (Invoice invoice in Model.Invoices)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(item => invoice.InvoiceDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => invoice.Id)
+                </td>
+                <td>
+                    @Html.DisplayFor(item => invoice.TotalCharges)
+                </td>
+                <td>
+                    @Html.ActionLink(
+                        "Details",
+                        $"/{invoice.Id}/Details",
+                        "Invoices")
+                </td>
+            </tr>
+        }
+    </table>
+</div>

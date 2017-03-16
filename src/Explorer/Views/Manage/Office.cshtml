@@ -1,0 +1,98 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.SubscriptionManageModel
+
+@{
+    ViewBag.Title = "Manage";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Breadcrumbs{
+    <ol class="breadcrumb navbar-breadcrumb">
+        <li>Customers</li>
+        <li><a href="/Customers/@Model.CustomerId/Show">@Model.CompanyName</a></li>
+        <li>Subscriptions</li>
+        <li><a href="/Customers/@Model.CustomerId/Subscriptions/@Model.SubscriptionId/Show">@Model.FriendlyName</a></li>
+        <li class="action">Manage</li>
+    </ol>
+}
+
+<div class="side-body padding-top">
+    <div id="modal-container" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-content"></div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 col-sm-8">
+            <select id="ddlDomains" class="form-control">
+                <option>Loading...</option>
+            </select>
+        </div>
+    </div>
+    <h4>Users</h4>
+    <hr />
+    <div class="row">
+        <div class="col-md-4 col-sm-8">
+            <a class="lnkNewUser" href="/Customers/@Model.CustomerId/Users/Create" id="NewUser">New User</a>
+        </div>
+    </div>
+    <div id="users" style="display: none;"></div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var ddlDomains = $('#ddlDomains');
+
+            $.ajax({
+                cache: true,
+                data: { customerId: '@Model.CustomerId' },
+                type: 'GET',
+                url: '@Url.Action("List", "Domains")',
+                success: function (data) {
+                    ddlDomains.html('');
+                    $.each(data, function (id) {
+                        ddlDomains.append($('<option></option>').val(data[id].Name).html(data[id].Name));
+                    });
+
+                    var domain = $('#ddlDomains').find(":selected").text();
+                }
+            });
+
+            $.get('/Customers/@Model.CustomerId/Users/List', function (data) {
+                $('#users').html(data);
+                $('#users').fadeIn('fast');
+            });
+
+            $('#ddlDomains').change(function () {
+                var domain = $(this).val();
+
+                $.get('/Customers/@Model.CustomerId/Domains/' + domain + '/ConfigurationRecords', function (data) {
+                    $('#records').html(data);
+                    $('#records').fadeIn('fast');
+                });
+            });
+
+            $(".lnkEditUser").click(function (e) {
+                e.preventDefault();
+                $(this).attr('data-target', '#modal-container');
+                $(this).attr('data-toggle', 'modal');
+            });
+
+            $(".lnkNewUser").click(function (e) {
+                e.preventDefault();
+                $(this).attr('data-target', '#modal-container');
+                $(this).attr('data-toggle', 'modal');
+            });
+
+            $(document).on('hidden.bs.modal', function (e) {
+                $(e.target).removeData('bs.modal').find(".modal-content").empty();
+            });
+        });
+
+        function OnUserDeleteCallback(data) {
+            $('#' + data).remove();
+        }
+
+        function OnSuccessCallback() {
+            $('#modal-container').modal('hide');
+        }
+    </script>
+}

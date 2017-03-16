@@ -1,0 +1,121 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title</title>
+    @Styles.Render("~/Content/css")
+</head>
+<body>
+    <div class="app-container">
+        <div class="row content-container">
+            <nav class="navbar navbar-default navbar-fixed-top navbar-top">
+                <div class="container-fluid">
+                    <div class="navbar-header">
+                        @RenderSection("Breadcrumbs", false)
+                        <button type="button" class="navbar-right-expand-toggle pull-right visible-xs">
+                            <i class="fa fa-th icon"></i>
+                        </button>
+                    </div>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li class="dropdown profile">
+                            @Html.Partial("_LoginPartial")
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            @{
+                string className = string.Empty;
+                string controller = ViewContext.RouteData.Values["Controller"].ToString();
+            }
+            <div class="side-menu sidebar-inverse">
+                <nav class="navbar navbar-default" role="navigation">
+                    <div class="side-menu-container">
+                        <ul class="nav navbar-nav">
+                            <li>
+                                <a href="#">
+                                    <span class="icon fa fa-bars navbar-expand-toggle"></span>
+                                </a>
+                            </li>
+                            <li class="@(controller == "Home" ? "active" : "" )">
+                                <a href="/">
+                                    <span class="icon fa fa-home"></span><span class="title">Home</span>
+                                </a>
+                            </li>
+                            <li class="@(controller == "Audit" ? "active" : "" )">
+                                <a href="/Audit/Search">
+                                    <span class="icon fa fa-unlock-alt"></span><span class="title">Audit Log</span>
+                                </a>
+                            </li>
+                            @if (controller == "Customers" || controller == "Manage" || controller == "Subscriptions" || controller == "Usage")
+                            {
+                                className = "active";
+                            }
+                            <li class="@className">
+                                <a href="/Customers">
+                                    <span class="icon fa fa-child"></span><span class="title">Customers</span>
+                                </a>
+                            </li>
+                            <li class="@(controller == "Invoices" ? "active" : "" )">
+                                <a href="/Invoices">
+                                    <span class="icon fa fa-dollar"></span><span class="title">Invoices</span>
+                                </a>
+                            </li>
+                            <li class="@(controller == "ServiceRequests" ? "active" : "" )">
+                                <a href="/ServiceRequests">
+                                    <span class="icon fa fa-heart-o"></span><span class="title">Service Requests</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+            <div class="container-fluid">
+                @RenderBody()
+            </div>
+        </div>
+        <footer class="app-footer">
+            <div class="wrapper">
+                &copy; @DateTime.Now.Year - Microsoft
+            </div>
+        </footer>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/jqueryval")
+    @Scripts.Render("~/bundles/jqueryui")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+    <script type="text/javascript" src="~/Scripts/application.js"></script>
+    <script type="text/javascript">
+            var appInsights = window.appInsights ||
+                function (config) {
+                    function r(config) {
+                        t[config] = function () {
+                            var i = arguments;
+                            t.queue.push(function () { t[config].apply(t, i) })
+                        }
+                    }
+
+                    var t = { config: config }, u = document, e = window, o = "script", s = u.createElement(o), i, f;
+                    for (s.src = config.url || "//az416426.vo.msecnd.net/scripts/a/ai.0.js", u.getElementsByTagName(o)[0]
+                            .parentNode.appendChild(s), t.cookie = u
+                            .cookie, t.queue = [], i = ["Event", "Exception", "Metric", "PageView", "Trace"];
+                        i.length;
+                    ) r("track" + i.pop());
+                    return r("setAuthenticatedUserContext"), r("clearAuthenticatedUserContext"),
+                        config.disableExceptionTracking ||
+                        (i = "onerror", r("_" + i), f = e[i], e[i] = function (config, r, u, e, o) {
+                            var s = f && f(config, r, u, e, o);
+                            return s !== !0 && t["_" + i](config, r, u, e, o), s
+                        }), t
+                }({
+                    instrumentationKey:
+                        "@Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration.Active.InstrumentationKey"
+                });
+
+            window.appInsights = appInsights;
+            appInsights.trackPageView();
+    </script>
+</body>
+</html>

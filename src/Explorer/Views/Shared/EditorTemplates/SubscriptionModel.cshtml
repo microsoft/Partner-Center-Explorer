@@ -1,0 +1,42 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.SubscriptionModel
+
+<tr>
+    <td>
+        @Html.ActionLink(
+            Model.FriendlyName,
+            $"Subscriptions/{Model.Id}/Show",
+            $"Customers/{Model.CustomerId}")
+    </td>
+
+    <td>
+        @Html.DisplayFor(item => item.Id)
+    </td>
+    <td>
+        @Html.DisplayFor(item => item.Status)
+    </td>
+    <td>
+        @Html.ActionLink(
+            "Health",
+            $"Health/{Model.Id}/",
+            $"Customers/{Model.CustomerId}")
+    </td>
+    <td>
+        @Html.ActionLink(
+            "Manage",
+            $"Manage/{Model.Id}/",
+            $"Customers/{Model.CustomerId}")
+    </td>
+    @if (Model.BillingType == Microsoft.Store.PartnerCenter.Models.Invoices.BillingType.Usage)
+    {
+        <td>
+            @Html.ActionLink(
+                "Usage",
+                $"Usage/{Model.Id}/",
+                $"Customers/{Model.CustomerId}")
+        </td>
+    }
+    else
+    {
+        <td></td>
+    }
+</tr>

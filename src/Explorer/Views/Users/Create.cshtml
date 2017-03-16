@@ -1,0 +1,87 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.NewUserModel
+
+@{
+    Layout = null;
+}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">&times;</button>
+    <h4 class="modal-title">New User</h4>
+</div>
+@using (Ajax.BeginForm("Create", "Users", new AjaxOptions { HttpMethod = "POST", InsertionMode = InsertionMode.Replace, OnSuccess = "OnUserSuccessCallback", UpdateTargetId = "users" }))
+{
+    <fieldset>
+        <div class="row">
+            &nbsp;
+        </div>
+        <div class="row">
+            <div class="col-xs-3 col-xs-offset-1">
+                @Html.LabelFor(item => Model.DisplayName)
+            </div>
+            <div class="col-xs-5">
+                @Html.TextBoxFor(item => Model.DisplayName, new { @class = "form-control" })
+            </div>
+            <div class="col-xs-3">
+                @Html.ValidationMessageFor(item => Model.DisplayName)
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-3 col-xs-offset-1">
+                @Html.LabelFor(item => Model.FirstName)
+            </div>
+            <div class="col-xs-5">
+                @Html.TextBoxFor(item => Model.FirstName, new { @class = "form-control" })
+            </div>
+            <div class="col-xs-3">
+                @Html.ValidationMessageFor(item => item.FirstName)
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-3 col-xs-offset-1">
+                @Html.LabelFor(item => item.LastName)
+            </div>
+            <div class="col-xs-5">
+                @Html.TextBoxFor(item => item.LastName, new { @class = "form-control" })
+            </div>
+            <div class="col-xs-3">
+                @Html.ValidationMessageFor(item => item.LastName)
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-3 col-xs-offset-1">
+                @Html.LabelFor(item => item.UserPrincipalName)
+            </div>
+            <div class="col-xs-5">
+                @Html.TextBoxFor(item => item.UserPrincipalName, new { @class = "form-control" })
+            </div>
+            <div class="col-xs-3">
+                @Html.ValidationMessageFor(item => item.UserPrincipalName)
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-3 col-xs-offset-1">
+                @Html.LabelFor(item => item.Password)
+            </div>
+            <div class="col-xs-5">
+                @Html.PasswordFor(item => item.Password, new { @class = "form-control", placeholder = "Password" })
+            </div>
+            <div class="col-xs-3">
+                @Html.ValidationMessageFor(item => item.Password)
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-offset-1">
+                <button type="button" class="btn btn-default"
+                        data-dismiss="modal">
+                    Cancel
+                </button>
+                <button type="submit" id="approve-btn"
+                        class="btn btn-danger">
+                    Create
+                </button>
+            </div>
+        </div>
+    </fieldset>
+}
+
+@Scripts.Render("~/bundles/jqueryval")

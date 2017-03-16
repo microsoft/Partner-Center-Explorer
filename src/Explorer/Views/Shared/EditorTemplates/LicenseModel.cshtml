@@ -1,0 +1,18 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.LicenseModel
+
+<tr>
+    <td>
+        @Html.DisplayFor(item => item.Name)
+    </td>
+    <td>
+        @Html.CheckBoxFor(item => item.IsAssigned)
+    </td>
+    <td>
+        @Html.Label(Model.ConsumedUnits.ToString()) of @Html.Label(Model.TotalUnits.ToString())
+    </td>
+    <td>
+        @Html.HiddenFor(item => item.Id)
+        @Html.HiddenFor(item => item.SkuPartNumber)
+        @Html.HiddenFor(item => item.TargetType)
+    </td>
+</tr>

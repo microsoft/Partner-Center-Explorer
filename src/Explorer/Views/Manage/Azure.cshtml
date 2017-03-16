@@ -1,0 +1,99 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.SubscriptionManageModel
+
+@{
+    ViewBag.Title = "Manage";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Breadcrumbs{
+    <ol class="breadcrumb navbar-breadcrumb">
+        <li>Customers</li>
+        <li><a href="/Customers/@Model.CustomerId/Show">@Model.CompanyName</a></li>
+        <li>Subscriptions</li>
+        <li><a href="/Customers/@Model.CustomerId/Subscriptions/@Model.SubscriptionId/Show">@Model.FriendlyName</a></li>
+        <li class="active">Manage</li>
+    </ol>
+}
+
+<div class="side-body padding-top">
+    <div id="modal-container" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-content"></div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 col-sm-8">
+            <select id="ddlResourceGroups" class="form-control">
+                <option>Loading...</option>
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <h4>Deployments</h4>
+        <hr />
+        <div class="row">
+            <div class="col-md-4 col-sm-8">
+                <a class="lnkNewDeployment" href="#" id="NewDeployment">New Deployment</a>
+            </div>
+        </div>
+        <div id="deployments" style="display: none;"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var ddlResourceGroups = $('#ddlResourceGroups');
+
+            $.ajax({
+                cache: true,
+                type: 'GET',
+                url: '@Url.Action("ResourceGroups", "Manage")',
+                success: function (data) {
+                    ddlResourceGroups.html('');
+                    $.each(data, function (index, item) {
+                        ddlResourceGroups.append($('<option></option>').val(item.Name).html(item.Name));
+                    });
+
+                    var group = ddlResourceGroups.find(":selected").text();
+
+                    $("#NewDeployment")
+                    .attr('href',
+                        '/Customers/@Model.CustomerId/Manage/@Model.SubscriptionId/NewDeployment?resourceGroupName=' +
+                        encodeURIComponent(group));
+
+                    $.get('/Customers/@Model.CustomerId/Manage/@Model.SubscriptionId/Deployments?resourceGroupName=' + group, function (data) {
+                        $('#deployments').html(data);
+                        $('#deployments').fadeIn('fast');
+                    });
+                }
+            });
+        });
+
+        $('#ddlResourceGroups').change(function () {
+            var group = $(this).val();
+
+            $("#NewDeployment")
+                .attr('href',
+                    '/Customers/@Model.CustomerId/Manage/@Model.SubscriptionId/NewDeployment?resourceGroupName=' +
+                    encodeURIComponent(group));
+
+            $.get('/Customers/@Model.CustomerId/Manage/@Model.SubscriptionId/Deployments?resourceGroupName=' + group, function (data) {
+                $('#deployments').html(data);
+                $('#deployments').fadeIn('fast');
+            });
+        });
+
+        $(".lnkNewDeployment").click(function (e) {
+            e.preventDefault();
+            $(this).attr('data-target', '#modal-container');
+            $(this).attr('data-toggle', 'modal');
+        });
+
+        $(document).on('hidden.bs.modal', function (e) {
+            $(e.target).removeData('bs.modal');
+        });
+
+        function OnSuccessCallback() {
+            $('#modal-container').modal('hide');
+        }
+    </script>
+}

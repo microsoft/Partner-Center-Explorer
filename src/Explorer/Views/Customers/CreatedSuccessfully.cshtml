@@ -1,0 +1,24 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.CreatedCustomerModel
+
+@{
+    Layout = null;
+}
+
+<div class="modal-header">
+    <h4 class="modal-title">New Customer Successfully Created</h4>
+</div>
+<div class="row">
+    &nbsp;
+</div>
+<div class="row">
+    <div class="col-xs-3 col-xs-offset-1">
+        @Html.LabelFor(item => Model.Username)
+        @($"{Model.Username}@{Model.Domain}")
+    </div>
+</div>
+<div class="row">
+    <div class="col-xs-3 col-xs-offset-1">
+        @Html.LabelFor(item => Model.Password)
+        @(Model.Password)
+    </div>
+</div>

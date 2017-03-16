@@ -1,0 +1,56 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.InvoiceDetailsModel
+@using Microsoft.Store.PartnerCenter.Models.Invoices
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Customer Name</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Offer Identifier</th>
+            <th>Offer Name</th>
+            <th>Quantity</th>
+            <th>Unit Price</th>
+            <th>Subtotal</th>
+            <th>Tax</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    @foreach (InvoiceLineItem lineItem in Model.InvoiceLineItems)
+    {
+        LicenseBasedLineItem element = (LicenseBasedLineItem)lineItem;
+
+        <tr>
+            <td>
+                @Html.DisplayFor(item => element.CustomerName)
+            </td>
+            <td>
+                @Html.DisplayFor(item => element.ChargeStartDate)
+            </td>
+            <td>
+                @Html.DisplayFor(item => element.ChargeEndDate)
+            </td>
+            <td>
+                @Html.DisplayFor(item => element.OfferId)
+            </td>
+            <td>
+                @Html.DisplayFor(item => element.OfferName)
+            </td>
+            <td>
+                @Html.DisplayFor(item => element.Quantity)
+            </td>
+            <td>
+                @Html.DisplayFor(item => element.UnitPrice)
+            </td>
+            <td>
+                @Html.DisplayFor(item => element.Subtotal)
+            </td>
+            <td>
+                @Html.DisplayFor(item => element.Tax)
+            </td>
+            <td>
+                @Html.DisplayFor(item => element.TotalForCustomer)
+            </td>
+        </tr>
+    }
+</table>

@@ -1,0 +1,50 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.AuditRecordsModel
+@using Microsoft.Store.PartnerCenter.Models.Auditing;
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Application Identifier</th>
+            <th>Customer Identifier</th>
+            <th>Customer Name</th>
+            <th>Operation Data</th>
+            <th>Operation Status</th>
+            <th>New Value</th>
+            <th>Old Value</th>
+            <th>Resource Type</th>
+            <th>User Principal Name</th>
+        </tr>
+    </thead>
+    @foreach (AuditRecord record in Model.Records.Items)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(item => record.ApplicationId)
+            </td>
+            <td>
+                @Html.DisplayFor(item => record.CustomerId)
+            </td>
+            <td>
+                @Html.DisplayFor(item => record.CustomerName)
+            </td>
+            <td>
+                @Html.DisplayFor(item => record.OperationDate)
+            </td>
+            <td>
+                @Html.DisplayFor(item => record.OperationStatus)
+            </td>
+            <td>
+                @Html.DisplayFor(item => record.ResourceNewValue)
+            </td>
+            <td>
+                @Html.DisplayFor(item => record.ResourceOldValue)
+            </td>
+            <td>
+                @Html.DisplayFor(item => record.ResourceType)
+            </td>
+            <td>
+                @Html.DisplayFor(item => record.UserPrincipalName)
+            </td>
+        </tr>
+    }
+</table>

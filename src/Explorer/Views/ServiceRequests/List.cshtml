@@ -1,0 +1,15 @@
+﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.ServiceRequestsModel
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Identifier</th>
+            <th>Created Date</th>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Organization</th>
+            <th>Product Name</th>
+        </tr>
+    </thead>
+    @Html.EditorFor(item => item.ServiceRequests)
+</table>

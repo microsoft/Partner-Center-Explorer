@@ -1,0 +1,57 @@
+﻿@using Microsoft.Store.PartnerCenter.Samples.Common.Models
+@model List<RunbookModel>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Runbook Type</th>
+            <th>Provisioning State</th>
+            <th>State</th>
+            <th></th>
+        </tr>
+    </thead>
+    @foreach (RunbookModel runbook in Model)
+    {
+        <tr id="@runbook.Id">
+            <td>
+                @Html.DisplayFor(item => runbook.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(item => runbook.Description)
+            </td>
+            <td>
+                @Html.DisplayFor(item => runbook.RunbookType)
+            </td>
+            <td>
+                @Html.DisplayFor(item => runbook.ProvisioningState)
+            </td>
+            <td>
+                @Html.DisplayFor(item => runbook.State)
+            </td>
+            <td>
+                <a class="lnkInvokeRunbook" href="/Automation/Invoke?runbookName=@runbook.Name" id="InvokeRunbook">Invoke</a>
+            </td>
+        </tr>
+    }
+</table>
+
+<script type="text/javascript">
+    $(document)
+    .on('hidden.bs.modal',
+        function (e) {
+            $(e.target).removeData('bs.modal').find(".modal-content").empty();
+        });
+
+    $(".lnkInvokeRunbook")
+        .click(function (e) {
+            e.preventDefault();
+            $(this).attr('data-target', '#modal-container');
+            $(this).attr('data-toggle', 'modal');
+        });
+
+    function OnSuccessCallback() {
+        $('#modal-container').modal('hide');
+    }
+</script>
