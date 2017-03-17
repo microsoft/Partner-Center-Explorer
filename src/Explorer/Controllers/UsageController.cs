@@ -63,7 +63,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                         .GetSubscriptionUsageAsync(customerId, subscriptionId, DateTime.Now.AddMonths(-1), DateTime.Now)
                 };
 
-
                 return this.View(usageModel);
             }
             finally

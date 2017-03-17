@@ -8,7 +8,7 @@ is possible and how it can be accomplished.
 This project is being provided with community support only. If you need help please
 log an issue using the [issue tracker](https://github.com/Microsoft/Partner-Center-Explorer/issues).
 
-__Current Build Status:__ ![Build Status](https://ustechsales.visualstudio.com/_apis/public/build/definitions/15dd995f-72f1-415c-ae52-f4c3d46fd161/10/badge)
+__Current Build Status:__ ![Build Status](https://ustechsales.visualstudio.com/_apis/public/build/definitions/08b6a9c4-c5bc-47c3-b945-aa13e7567100/17/badge)
 
 ## Deployment
 Please see the [deployment guide](docs/Deployment.md) for details on how to deploy this project.

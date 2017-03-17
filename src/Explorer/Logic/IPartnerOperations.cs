@@ -33,11 +33,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// </summary>
         /// <param name="customerId">Identifier for the customer.</param>
         /// <param name="newOrder">An instance of <see cref="Order"/> that represents the new order.</param>
-        /// <returns>An instance of <see cref="Order"/> that represents the new order.</returns>
+        /// <returns>An instance of <see cref="Order"/> that represents the newly created order.</returns>
         Task<Order> CreateOrderAsync(string customerId, Order newOrder);
 
         /// <summary>
-        /// Deletes the specified custmer. This operation is only valid when connected to the 
+        /// Deletes the specified customer. This operation is only valid when connected to the 
         /// integration sandbox tenant.
         /// </summary>
         /// <param name="customerId">Identifier for the customer.</param>
@@ -72,7 +72,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// <param name="subscriptionId">Identifier for the subscription.</param>
         /// <param name="startTime">The starting time of when the utilization was metered in the billing system.</param>
         /// <param name="endTime">The ending time of when the utilization was metered in the billing system.</param>
-        /// <returns>A list of <see cref="AzureUtilizationRecord"/>s that represents usage that occured during the specified time period.</returns>
+        /// <returns>A list of <see cref="AzureUtilizationRecord"/>s that represents usage that occurred during the specified time period.</returns>
         Task<List<AzureUtilizationRecord>> GetSubscriptionUsageAsync(string customerId, string subscriptionId, DateTime startTime, DateTime endTime);
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// Updates the specified subscription.
         /// </summary>
         /// <param name="customerId">Identifier for the customer.</param>
-        /// <param name="subscription">An instance of <see cref="Subscription"/> that represents the modified subscription.</param>
+        /// <param name="subscription">An instance of <see cref="Subscription"/>.</param>
         /// <returns>An instance of <see cref="Subscription"/> that represents the modified subscription.</returns>
         Task<Subscription> UpdateSubscriptionAsync(string customerId, Subscription subscription);
     }
