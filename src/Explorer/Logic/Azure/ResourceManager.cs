@@ -52,7 +52,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
             service.AssertNotNull(nameof(service));
             token.AssertNotEmpty(nameof(token));
 
-            this.client = new ResourceManagementClient(new TokenCredentials(token));
+            client = new ResourceManagementClient(new TokenCredentials(token));
             this.service = service;
         }
 
@@ -61,7 +61,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
         /// </summary>
         public void Dispose()
         {
-            this.Dispose(true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
@@ -110,7 +110,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
 
                 deploymentName = Guid.NewGuid().ToString();
 
-                result = await this.client.Deployments.CreateOrUpdateAsync(resourceGroupName, deploymentName, deployment);
+                result = await client.Deployments.CreateOrUpdateAsync(resourceGroupName, deploymentName, deployment);
 
                 return result.Properties.ProvisioningState;
             }
@@ -141,8 +141,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
 
             try
             {
-                this.client.SubscriptionId = subscriptionId;
-                deployements = await this.client.Deployments.ListAsync(resourceGroupName);
+                client.SubscriptionId = subscriptionId;
+                deployements = await client.Deployments.ListByResourceGroupAsync(resourceGroupName);
 
                 return deployements.ToList();
             }
@@ -168,8 +168,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
 
             try
             {
-                this.client.SubscriptionId = subscriptionId;
-                resourceGroups = await this.client.ResourceGroups.ListAsync();
+                client.SubscriptionId = subscriptionId;
+                resourceGroups = await client.ResourceGroups.ListAsync();
                 return resourceGroups.ToList();
             }
             finally
@@ -184,17 +184,17 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
         /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (this.disposed)
+            if (disposed)
             {
                 return;
             }
 
             if (disposing)
             {
-                this.client.Dispose();
+                client.Dispose();
             }
 
-            this.disposed = true;
+            disposed = true;
         }
     }
 }
