@@ -20,15 +20,6 @@ The following are _required_ prerequisites for this sample project
 |  Azure AD global admin privileges       | Required to create the required Azure AD application utilized to obtain access tokens.                            |
 |  Partner Center admin agent privileges  | Required to perform various Partner Center operations through the Partner Center API.                             |
 
-## Azure Key Vault
-Azure Key Vault is utilized by this project to protect application secrets and 
-various connection strings. It is not required that this service by deployed, 
-however, it is highly recommend that you utilize this service to protect this 
-sensitive information.
-
-If you would like to utilize Azure Key Vault then please follows the steps outlined
-in the [Azure Key Vault](KeyVault.md) documentation.
-
 ## Partner Center Azure AD Application
 App only authentication is utilized when performing various operations using the 
 Partner Center API. In order to obtain the necessary access token to perform 

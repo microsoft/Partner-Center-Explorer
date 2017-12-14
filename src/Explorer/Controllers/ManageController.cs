@@ -14,6 +14,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     using Azure.Management.ResourceManager.Models;
     using Logic;
     using Logic.Azure;
+    using Microsoft.IdentityModel.Clients.ActiveDirectory;
     using Models;
     using PartnerCenter.Models.Customers;
     using PartnerCenter.Models.Invoices;
@@ -90,8 +91,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                customer = await this.Service.PartnerCenter.Customers.ById(customerId).GetAsync();
-                subscription = await this.Service.PartnerCenter.Customers.ById(customerId).Subscriptions.ById(subscriptionId).GetAsync();
+                customer = await Service.PartnerOperations.GetCustomerAsync(customerId);
+                subscription = await Service.PartnerOperations.GetSubscriptionAsync(customerId, subscriptionId);
 
                 manageModel = new SubscriptionManageModel
                 {
@@ -120,7 +121,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                     };
                 }
 
-                return this.View(manageModel.ViewName, manageModel);
+                return View(manageModel.ViewName, manageModel);
             }
             finally
             {
@@ -146,7 +147,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                 SubscriptionId = subscriptionId
             };
 
-            return this.PartialView(newDeploymentModel);
+            return PartialView(newDeploymentModel);
         }
 
         /// <summary>
@@ -157,16 +158,15 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         [HttpPost]
         public async Task<PartialViewResult> NewDeployment(NewDeploymentModel model)
         {
-            AuthenticationToken token;
+            AuthenticationResult token;
             List<DeploymentModel> results;
 
             try
             {
-                token = await this.Service.TokenManagement.GetAppPlusUserTokenAsync(
-                    $"{this.Service.Configuration.ActiveDirectoryEndpoint}/{model.CustomerId}",
-                   this.Service.Configuration.AzureResourceManagerEndpoint);
+                token = await GetAccessTokenAsync(
+                    $"{Service.Configuration.ActiveDirectoryEndpoint}/{model.CustomerId}");
 
-                using (ResourceManager manager = new ResourceManager(this.Service, token.Token))
+                using (ResourceManager manager = new ResourceManager(Service, token.AccessToken))
                 {
                     await manager.ApplyTemplateAsync(
                         model.SubscriptionId,
@@ -174,8 +174,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                         model.TemplateUri,
                         model.ParametersUri);
 
-                    results = await this.GetDeploymentsAsync(model.CustomerId, model.ResourceGroupName, model.SubscriptionId);
-                    return this.PartialView("Deployments", results);
+                    results = await GetDeploymentsAsync(model.CustomerId, model.ResourceGroupName, model.SubscriptionId);
+                    return PartialView("Deployments", results);
                 }
             }
             finally
@@ -199,7 +199,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         [HttpGet]
         public async Task<JsonResult> ResourceGroups(string customerId, string subscriptionId)
         {
-            AuthenticationToken token;
+            AuthenticationResult token;
             List<ResourceGroup> groups;
 
             customerId.AssertNotEmpty(nameof(customerId));
@@ -207,14 +207,13 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                token = await this.Service.TokenManagement.GetAppPlusUserTokenAsync(
-                    $"{this.Service.Configuration.ActiveDirectoryEndpoint}/{customerId}",
-                   this.Service.Configuration.AzureResourceManagerEndpoint);
+                token = await GetAccessTokenAsync(
+                    $"{Service.Configuration.ActiveDirectoryEndpoint}/{customerId}");
 
-                using (ResourceManager manager = new ResourceManager(this.Service, token.Token))
+                using (ResourceManager manager = new ResourceManager(Service, token.AccessToken))
                 {
                     groups = await manager.GetResourceGroupsAsync(subscriptionId);
-                    return this.Json(groups, JsonRequestBehavior.AllowGet);
+                    return Json(groups, JsonRequestBehavior.AllowGet);
                 }
             }
             finally
@@ -233,7 +232,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// <returns>A list of <see cref="DeploymentModel"/>s that represents the deployments.</returns>
         private async Task<List<DeploymentModel>> GetDeploymentsAsync(string customerId, string resourceGroupName, string subscriptionId)
         {
-            AuthenticationToken token;
+            AuthenticationResult token;
             List<DeploymentExtended> deployments;
 
             customerId.AssertNotEmpty(nameof(customerId));
@@ -242,11 +241,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                token = await this.Service.TokenManagement.GetAppPlusUserTokenAsync(
-                  $"{this.Service.Configuration.ActiveDirectoryEndpoint}/{customerId}",
-                 this.Service.Configuration.AzureResourceManagerEndpoint);
+                token = await GetAccessTokenAsync(
+                  $"{Service.Configuration.ActiveDirectoryEndpoint}/{customerId}");
 
-                using (ResourceManager manager = new ResourceManager(this.Service, token.Token))
+                using (ResourceManager manager = new ResourceManager(Service, token.AccessToken))
                 {
                     deployments = await manager.GetDeploymentsAsync(subscriptionId, resourceGroupName);
 
@@ -264,6 +262,20 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                 deployments = null;
                 token = null;
             }
+        }
+
+        private async Task<AuthenticationResult> GetAccessTokenAsync(string authority)
+        {
+            return await Service.AccessToken.GetAccessTokenAsync(
+                authority,
+                Service.Configuration.AzureResourceManagerEndpoint,
+                new ApplicationCredential
+                {
+                    ApplicationId = Service.Configuration.ApplicationId,
+                    ApplicationSecret = Service.Configuration.ApplicationSecret,
+                    UseCache = true
+                },
+                Service.AccessToken.UserAssertionToken);
         }
     }
 }

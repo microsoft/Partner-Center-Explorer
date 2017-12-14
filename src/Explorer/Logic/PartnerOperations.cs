@@ -8,9 +8,16 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 {
     using System;
     using System.Collections.Generic;
+    using System.Security.Claims;
     using System.Threading.Tasks;
-    using System.Web;
     using Cache;
+    using Microsoft.IdentityModel.Clients.ActiveDirectory;
+    using Microsoft.Store.PartnerCenter.Extensions;
+    using Microsoft.Store.PartnerCenter.Models.Auditing;
+    using Microsoft.Store.PartnerCenter.Models.Licenses;
+    using Microsoft.Store.PartnerCenter.Models.Query;
+    using Microsoft.Store.PartnerCenter.Models.ServiceRequests;
+    using Microsoft.Store.PartnerCenter.Models.Users;
     using PartnerCenter.Enumerators;
     using PartnerCenter.Models;
     using PartnerCenter.Models.Customers;
@@ -28,9 +35,19 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
     public class PartnerOperations : IPartnerOperations
     {
         /// <summary>
+        /// Name of the application calling the Partner Center Managed API.
+        /// </summary>
+        private const string ApplicationName = "Partner Center Explorer v2.0";
+
+        /// <summary>
         /// Key to utilized when interacting with the cache for available offers.
         /// </summary>
         private const string OffersKey = "AvailableOffers";
+
+        /// <summary>
+        /// Key utilized to retrieve and store Partner Center access tokens. 
+        /// </summary>
+        private const string PartnerCenterCacheKey = "Resource::PartnerCenter::AppOnly";
 
         /// <summary>
         /// Provides the ability to perform partner operation using app only authentication.
@@ -38,14 +55,15 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         private IAggregatePartner appOperations;
 
         /// <summary>
-        /// Provides the ability to perform partner operation using app plus user authentication.
-        /// </summary>
-        private IAggregatePartner userOperations;
-
-        /// <summary>
         /// Provides access to core services.
         /// </summary>
         private IExplorerService service;
+
+        /// <summary>
+        /// Provides a way to ensure that <see cref="appOperations"/> is only being modified 
+        /// by one thread at a time. 
+        /// </summary>
+        private readonly object appLock = new object();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PartnerOperations"/> class.
@@ -58,6 +76,63 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         {
             service.AssertNotNull(nameof(service));
             this.service = service;
+        }
+
+        /// <summary>
+        /// Checks if the specified domain is available.
+        /// </summary>
+        /// <param name="domain">Domain to be cheked for availability.</param>
+        /// <returns><c>true</c> if the domain is available; otherwise <c>false</c></returns>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="domain"/> is empty or null.
+        /// </exception>
+        public async Task<bool> CheckDomainAsync(string domain)
+        {
+            CustomerPrincipal principal;
+            DateTime executionTime;
+            Dictionary<string, double> eventMetrics;
+            Dictionary<string, string> eventProperties;
+            Guid correlationId;
+            IPartner operations;
+            bool exists;
+
+            domain.AssertNotEmpty(nameof(domain));
+
+            try
+            {
+                executionTime = DateTime.Now;
+                correlationId = Guid.NewGuid();
+                operations = await GetAppOperationsAsync(correlationId);
+
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
+
+                exists = await operations.Domains.ByDomain(domain).ExistsAsync();
+
+                eventMetrics = new Dictionary<string, double>
+                {
+                    { "ElapsedMilliseconds", DateTime.Now.Subtract(executionTime).TotalMilliseconds }
+                };
+
+                eventProperties = new Dictionary<string, string>
+                {
+                    { "CustomerId", principal.CustomerId },
+                    { "Domain", domain },
+                    { "Exists", exists.ToString() },
+                    { "Name", principal.Name },
+                    { "ParternCenterCorrelationId", correlationId.ToString() }
+                };
+
+                service.Telemetry.TrackEvent(nameof(CheckDomainAsync), eventProperties, eventMetrics);
+
+                return exists;
+            }
+            finally
+            {
+                eventMetrics = null;
+                eventProperties = null;
+                operations = null;
+                principal = null;
+            }
         }
 
         /// <summary>
@@ -86,7 +161,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                 correlationId = Guid.NewGuid();
                 operations = await this.GetAppOperationsAsync(correlationId);
 
-                principal = (CustomerPrincipal)HttpContext.Current.User;
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 if (!principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
                 {
@@ -109,7 +184,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                this.service.Telemetry.TrackEvent("CreateCustomerAsync", eventProperties, eventMetrics);
+                service.Telemetry.TrackEvent(nameof(CreateCustomerAsync), eventProperties, eventMetrics);
 
                 return newEntity;
             }
@@ -145,11 +220,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 startTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await this.GetAppOperationsAsync(correlationId);
+                operations = await GetAppOperationsAsync(correlationId);
 
-                principal = (CustomerPrincipal)HttpContext.Current.User;
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
                 {
                     newEntity = await operations.Customers.ById(customerId).Orders.CreateAsync(newOrder);
                 }
@@ -172,9 +247,79 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                this.service.Telemetry.TrackEvent("CreateOrderAsync", eventProperties, eventMetrics);
+                service.Telemetry.TrackEvent(nameof(CreateOrderAsync), eventProperties, eventMetrics);
 
                 return newEntity;
+            }
+            finally
+            {
+                eventMetrics = null;
+                eventProperties = null;
+                operations = null;
+                principal = null;
+            }
+        }
+
+        /// <summary>
+        /// Creates the specified user.
+        /// </summary>
+        /// <param name="customerId">Identifier of the customer.</param>
+        /// <param name="newEntity">An aptly populated instance of <see cref="CustomerUser"/>.</param>
+        /// <returns>An instance of <see cref="CustomerUser"/> representing the new user.</returns>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="customerId"/> is empty or null.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="newEntity"/> is null.
+        /// </exception>
+        /// <exception cref="UnauthorizedAccessException">
+        /// The authenticated user is not authorized to perform this operation.
+        /// </exception>
+        public async Task<CustomerUser> CreateUserAsync(string customerId, CustomerUser newEntity)
+        {
+            CustomerPrincipal principal;
+            CustomerUser user;
+            DateTime executionTime;
+            Dictionary<string, double> eventMetrics;
+            Dictionary<string, string> eventProperties;
+            Guid correlationId;
+            IPartner operations;
+
+            customerId.AssertNotEmpty(nameof(customerId));
+            newEntity.AssertNotNull(nameof(user));
+
+            try
+            {
+                executionTime = DateTime.Now;
+                correlationId = Guid.NewGuid();
+                operations = await GetAppOperationsAsync(correlationId);
+
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
+
+                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                {
+                    user = await operations.Customers.ById(customerId).Users.CreateAsync(newEntity);
+                }
+                else
+                {
+                    throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
+                }
+
+                eventMetrics = new Dictionary<string, double>
+                {
+                    { "ElapsedMilliseconds", DateTime.Now.Subtract(executionTime).TotalMilliseconds }
+                };
+
+                eventProperties = new Dictionary<string, string>
+                {
+                    { "CustomerId", principal.CustomerId },
+                    { "Name", principal.Name },
+                    { "ParternCenterCorrelationId", correlationId.ToString() }
+                };
+
+                service.Telemetry.TrackEvent(nameof(CreateUserAsync), eventProperties, eventMetrics);
+
+                return user;
             }
             finally
             {
@@ -211,14 +356,80 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                 correlationId = Guid.NewGuid();
                 operations = await this.GetAppOperationsAsync(correlationId);
 
-                principal = (CustomerPrincipal)HttpContext.Current.User;
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (!principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
+                if (!principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
                 {
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
 
                 await operations.Customers.ById(customerId).DeleteAsync();
+
+                // Track the event measurements for analysis.
+                eventMetrics = new Dictionary<string, double>
+                {
+                    { "ElapsedMilliseconds", DateTime.Now.Subtract(startTime).TotalMilliseconds }
+                };
+
+                // Capture the request for the customer summary for analysis.
+                eventProperties = new Dictionary<string, string>
+                {
+                    { "CustomerId", principal.CustomerId },
+                    { "Name", principal.Name },
+                    { "ParternCenterCorrelationId", correlationId.ToString() }
+                };
+
+                service.Telemetry.TrackEvent(nameof(DeleteCustomerAsync), eventProperties, eventMetrics);
+            }
+            finally
+            {
+                eventMetrics = null;
+                eventProperties = null;
+                operations = null;
+                principal = null;
+            }
+        }
+
+        /// <summary>
+        /// Deletes the specified user.
+        /// </summary>
+        /// <param name="customerId">Identifier of the customer.</param>
+        /// <param name="userId">Identifier of the user.</param>
+        /// <returns>An instance of <see cref="Task"/> that represents the asynchronous operation.</returns>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="customerId"/> is empty or null.
+        /// or
+        /// <paramref name="userId"/> is empty or null.
+        /// </exception>
+        /// <exception cref="UnauthorizedAccessException">
+        /// The authenticated user is not authorized to perform this operation.
+        /// </exception>
+        public async Task DeleteUserAsync(string customerId, string userId)
+        {
+            CustomerPrincipal principal;
+            DateTime startTime;
+            Dictionary<string, double> eventMetrics;
+            Dictionary<string, string> eventProperties;
+            Guid correlationId;
+            IPartner operations;
+
+            customerId.AssertNotEmpty(nameof(customerId));
+            userId.AssertNotEmpty(nameof(userId));
+
+            try
+            {
+                startTime = DateTime.Now;
+                correlationId = Guid.NewGuid();
+                operations = await GetAppOperationsAsync(correlationId);
+
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
+
+                if (!principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                {
+                    throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
+                }
+
+                await operations.Customers.ById(customerId).Users.ById(userId).DeleteAsync();
 
                 // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
@@ -246,6 +457,58 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         }
 
         /// <summary>
+        /// Get the audit records available for the defined time period.
+        /// </summary>
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <returns></returns>
+        public async Task<SeekBasedResourceCollection<AuditRecord>> GetAuditRecordsAsync(DateTime startDate, DateTime endDate)
+        {
+            CustomerPrincipal principal;
+            DateTime executionTime;
+            Dictionary<string, double> eventMetrics;
+            Dictionary<string, string> eventProperties;
+            Guid correlationId;
+            IPartner operations;
+            SeekBasedResourceCollection<AuditRecord> records;
+
+            try
+            {
+                executionTime = DateTime.Now;
+                correlationId = Guid.NewGuid();
+                operations = await GetAppOperationsAsync(correlationId);
+
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
+
+                records = await operations.AuditRecords.QueryAsync(
+                    startDate,
+                    endDate,
+                    QueryFactory.Instance.BuildSimpleQuery());
+
+                eventMetrics = new Dictionary<string, double>
+                {
+                    { "ElapsedMilliseconds", DateTime.Now.Subtract(executionTime).TotalMilliseconds },
+                    { "NumberOfAuditRecords", records.TotalCount }
+                };
+
+                eventProperties = new Dictionary<string, string>
+                {
+                    { "CustomerId", principal.CustomerId },
+                    { "Name", principal.Name },
+                    { "ParternCenterCorrelationId", correlationId.ToString() }
+                };
+
+                service.Telemetry.TrackEvent(nameof(GetAuditRecordsAsync), eventProperties, eventMetrics);
+
+                return records;
+            }
+            finally
+            {
+
+            }
+        }
+
+        /// <summary>
         /// Gets the specified customer.
         /// </summary>
         /// <param name="customerId">Identifier for the customer.</param>
@@ -269,7 +532,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                 correlationId = Guid.NewGuid();
                 operations = await this.GetAppOperationsAsync(correlationId);
 
-                principal = (CustomerPrincipal)HttpContext.Current.User;
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 if (principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
                 {
@@ -330,7 +593,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                 correlationId = Guid.NewGuid();
                 operations = await this.GetAppOperationsAsync(correlationId);
 
-                principal = (CustomerPrincipal)HttpContext.Current.User;
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 customers = new List<Customer>();
 
@@ -366,7 +629,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                this.service.Telemetry.TrackEvent("GetCustomersAsync", eventProperties, eventMetrics);
+                service.Telemetry.TrackEvent(nameof(GetCustomersAsync), eventProperties, eventMetrics);
 
                 return customers;
             }
@@ -379,6 +642,70 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                 principal = null;
                 seekCustomers = null;
             }
+        }
+
+        /// <summary>
+        /// Gets the subscribed SKUs for the specified customer.
+        /// </summary>
+        /// <param name="customerId">Identifier for the customer.</param>
+        /// <returns>A collection of SKUs that where the customer has subscribed.</returns>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="customerId"/> is empty or null.
+        /// </exception>
+        public async Task<ResourceCollection<SubscribedSku>> GetCustomerSubscribedSkusAsync(string customerId)
+        {
+            CustomerPrincipal principal;
+            DateTime startTime;
+            Dictionary<string, double> eventMetrics;
+            Dictionary<string, string> eventProperties;
+            Guid correlationId;
+            IPartner operations;
+            ResourceCollection<SubscribedSku> skus;
+
+            customerId.AssertNotEmpty(nameof(customerId));
+
+            try
+            {
+                startTime = DateTime.Now;
+                correlationId = Guid.NewGuid();
+                operations = await GetUserOperationsAsync(correlationId);
+
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
+
+                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId) ||
+                    principal.CustomerId.Equals(customerId))
+                {
+                    skus = await operations.Customers.ById(customerId).SubscribedSkus.GetAsync();
+                }
+                else
+                {
+                    throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
+                }
+
+                eventMetrics = new Dictionary<string, double>
+                {
+                    { "ElapsedMilliseconds", DateTime.Now.Subtract(startTime).TotalMilliseconds }
+                };
+
+                eventProperties = new Dictionary<string, string>
+                {
+                    { "CustomerId", principal.CustomerId },
+                    { "Name", principal.Name },
+                    { "ParternCenterCorrelationId", correlationId.ToString() }
+                };
+
+                service.Telemetry.TrackEvent(nameof(GetCustomerSubscribedSkusAsync), eventProperties, eventMetrics);
+
+                return skus;
+            }
+            finally
+            {
+                eventMetrics = null;
+                eventProperties = null;
+                operations = null;
+                principal = null;
+            }
+
         }
 
         /// <summary>
@@ -407,7 +734,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                 correlationId = Guid.NewGuid();
                 operations = await this.GetUserOperationsAsync(correlationId);
 
-                principal = (CustomerPrincipal)HttpContext.Current.User;
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 if (!principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
                 {
@@ -471,7 +798,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                 correlationId = Guid.NewGuid();
                 operations = await this.GetUserOperationsAsync(correlationId);
 
-                principal = (CustomerPrincipal)HttpContext.Current.User;
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 if (!principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
                 {
@@ -529,7 +856,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                 correlationId = Guid.NewGuid();
                 operations = await this.GetAppOperationsAsync(correlationId);
 
-                principal = (CustomerPrincipal)HttpContext.Current.User;
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 if (!principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
                 {
@@ -587,7 +914,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                 correlationId = Guid.NewGuid();
                 operations = await this.GetAppOperationsAsync(correlationId);
 
-                principal = (CustomerPrincipal)HttpContext.Current.User;
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 offers = await this.service.Cache.FetchAsync<ResourceCollection<Offer>>(CacheDatabaseType.DataStructures, OffersKey);
 
@@ -627,6 +954,63 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         }
 
         /// <summary>
+        /// Gets a list of service requests.
+        /// </summary>
+        /// <returns>A list of service requests.</returns>
+        public async Task<ResourceCollection<ServiceRequest>> GetServiceRequestsAsync()
+        {
+            CustomerPrincipal principal;
+            DateTime executionTime;
+            Dictionary<string, double> eventMetrics;
+            Dictionary<string, string> eventProperties;
+            Guid correlationId;
+            IPartner operations;
+            ResourceCollection<ServiceRequest> requests;
+
+            try
+            {
+                executionTime = DateTime.Now;
+                correlationId = Guid.NewGuid();
+                operations = await GetAppOperationsAsync(correlationId);
+
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
+
+                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                {
+                    requests = await operations.ServiceRequests.GetAsync();
+                }
+                else
+                {
+                    requests = new ResourceCollection<ServiceRequest>(new List<ServiceRequest>());
+                }
+
+                eventMetrics = new Dictionary<string, double>
+                {
+                    { "ElapsedMilliseconds", DateTime.Now.Subtract(executionTime).TotalMilliseconds },
+                    { "NumberOfRequests", requests.TotalCount }
+                };
+
+                eventProperties = new Dictionary<string, string>
+                {
+                    { "CustomerId", principal.CustomerId },
+                    { "Name", principal.Name },
+                    { "ParternCenterCorrelationId", correlationId.ToString() }
+                };
+
+                service.Telemetry.TrackEvent(nameof(GetServiceRequestsAsync), eventProperties, eventMetrics);
+
+                return requests;
+            }
+            finally
+            {
+                eventMetrics = null;
+                eventProperties = null;
+                operations = null;
+                principal = null;
+            }
+        }
+
+        /// <summary>
         /// Gets the specified subscription.
         /// </summary>
         /// <param name="customerId">Identifier for the customer.</param>
@@ -656,7 +1040,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                 correlationId = Guid.NewGuid();
                 operations = await this.GetAppOperationsAsync(correlationId);
 
-                principal = (CustomerPrincipal)HttpContext.Current.User;
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 if (principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
                 {
@@ -667,13 +1051,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     subscription = await operations.Customers.ById(principal.CustomerId).Subscriptions.ById(subscriptionId).GetAsync();
                 }
 
-                // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
                 {
                     { "ElapsedMilliseconds", DateTime.Now.Subtract(startTime).TotalMilliseconds }
                 };
 
-                // Capture the request for the customer summary for analysis.
                 eventProperties = new Dictionary<string, string>
                 {
                     { "CustomerId", principal.CustomerId },
@@ -681,7 +1063,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                this.service.Telemetry.TrackEvent("GetSubscriptionAsync", eventProperties, eventMetrics);
+                service.Telemetry.TrackEvent(nameof(GetSubscriptionAsync), eventProperties, eventMetrics);
 
                 return subscription;
             }
@@ -720,7 +1102,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                 correlationId = Guid.NewGuid();
                 operations = await this.GetAppOperationsAsync(correlationId);
 
-                principal = (CustomerPrincipal)HttpContext.Current.User;
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 if (principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
                 {
@@ -788,7 +1170,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                 correlationId = Guid.NewGuid();
                 operations = await this.GetAppOperationsAsync(correlationId);
 
-                principal = (CustomerPrincipal)HttpContext.Current.User;
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 usageRecords = new List<AzureUtilizationRecord>();
 
@@ -848,6 +1230,142 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         }
 
         /// <summary>
+        /// Gets the specified user.
+        /// </summary>
+        /// <param name="customerId">Identifier for the customer.</param>
+        /// <param name="userId">Identifier for the user.</param>
+        /// <returns>An instance of <see cref="CustomerUser"/> that represents the requested user.</returns>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="customerId"/> is empty or null.
+        /// or
+        /// <paramref name="userId"/> is empty or null.
+        /// </exception>
+        public async Task<CustomerUser> GetUserAsync(string customerId, string userId)
+        {
+            CustomerPrincipal principal;
+            CustomerUser user;
+            DateTime startTime;
+            Dictionary<string, double> eventMetrics;
+            Dictionary<string, string> eventProperties;
+            Guid correlationId;
+            IPartner operations;
+
+            customerId.AssertNotEmpty(nameof(customerId));
+            userId.AssertNotEmpty(nameof(userId));
+
+            try
+            {
+                startTime = DateTime.Now;
+                correlationId = Guid.NewGuid();
+                operations = await GetUserOperationsAsync(correlationId);
+
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
+
+                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId) ||
+                    principal.CustomerId.Equals(customerId))
+                {
+                    user = await operations.Customers.ById(customerId).Users.ById(userId).GetAsync();
+                }
+                else
+                {
+                    throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
+                }
+
+                eventMetrics = new Dictionary<string, double>
+                {
+                    { "ElapsedMilliseconds", DateTime.Now.Subtract(startTime).TotalMilliseconds }
+                };
+
+                eventProperties = new Dictionary<string, string>
+                {
+                    { "CustomerId", principal.CustomerId },
+                    { "UserId", userId },
+                    { "Name", principal.Name },
+                    { "ParternCenterCorrelationId", correlationId.ToString() }
+                };
+
+                service.Telemetry.TrackEvent(nameof(GetUserAsync), eventProperties, eventMetrics);
+
+                return user;
+            }
+            finally
+            {
+                eventMetrics = null;
+                eventProperties = null;
+                operations = null;
+                principal = null;
+            }
+        }
+
+        /// <summary>
+        /// Gets the licenses assigned to the specified user.
+        /// </summary>
+        /// <param name="customerId">Identifier for the customer.</param>
+        /// <param name="userId">Identifier for the user.</param>
+        /// <returns>A collection of licenses assigned to the user.</returns>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="customerId"/> is empty or null.
+        /// or
+        /// <paramref name="userId"/> is empty or null.
+        /// </exception>
+        public async Task<ResourceCollection<License>> GetUserLicensesAsync(string customerId, string userId)
+        {
+            CustomerPrincipal principal;
+            DateTime executionTime;
+            Dictionary<string, double> eventMetrics;
+            Dictionary<string, string> eventProperties;
+            Guid correlationId;
+            IPartner operations;
+            ResourceCollection<License> licenses;
+
+            customerId.AssertNotEmpty(nameof(customerId));
+            userId.AssertNotEmpty(nameof(userId));
+
+            try
+            {
+                executionTime = DateTime.Now;
+                correlationId = Guid.NewGuid();
+                operations = await GetUserOperationsAsync(correlationId);
+
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
+
+                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId) ||
+                    principal.CustomerId.Equals(customerId))
+                {
+                    licenses = await operations.Customers.ById(customerId).Users.ById(userId).Licenses.GetAsync();
+                }
+                else
+                {
+                    throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
+                }
+
+                eventMetrics = new Dictionary<string, double>
+                {
+                    { "ElapsedMilliseconds", DateTime.Now.Subtract(executionTime).TotalMilliseconds }
+                };
+
+                eventProperties = new Dictionary<string, string>
+                {
+                    { "CustomerId", principal.CustomerId },
+                    { "UserId", userId },
+                    { "Name", principal.Name },
+                    { "ParternCenterCorrelationId", correlationId.ToString() }
+                };
+
+                service.Telemetry.TrackEvent(nameof(GetUserLicensesAsync), eventProperties, eventMetrics);
+
+                return licenses;
+            }
+            finally
+            {
+                eventMetrics = null;
+                eventProperties = null;
+                operations = null;
+                principal = null;
+            }
+        }
+
+        /// <summary>
         /// Updates the specified subscription.
         /// </summary>
         /// <param name="customerId">Identifier for the customer.</param>
@@ -876,11 +1394,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 startTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await this.GetAppOperationsAsync(correlationId);
+                operations = await GetAppOperationsAsync(correlationId);
 
-                principal = (CustomerPrincipal)HttpContext.Current.User;
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
                 {
                     updatedSubscription = await operations.Customers.ById(customerId).Subscriptions
                         .ById(subscription.Id).PatchAsync(subscription);
@@ -905,9 +1423,144 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                this.service.Telemetry.TrackEvent("GetSubscriptionAsync", eventProperties, eventMetrics);
+                service.Telemetry.TrackEvent(nameof(UpdateSubscriptionAsync), eventProperties, eventMetrics);
 
                 return updatedSubscription;
+            }
+            finally
+            {
+                eventMetrics = null;
+                eventProperties = null;
+                operations = null;
+                principal = null;
+            }
+        }
+
+        /// <summary>
+        /// Updates the specified user.
+        /// </summary>
+        /// <param name="customerId">Identifier for the customer.</param>
+        /// <param name="userId">Identifier for the user.</param>
+        /// <param name="entity">An aptly populated instance of the <see cref="CustomerUser"/> class.</param>
+        /// <returns>An instance of <see cref="CustomerUser"/> that represents the updated user.</returns>
+        public async Task<CustomerUser> UpdateUserAsync(string customerId, string userId, CustomerUser entity)
+        {
+            CustomerPrincipal principal;
+            CustomerUser user;
+            DateTime executionTime;
+            Dictionary<string, double> eventMetrics;
+            Dictionary<string, string> eventProperties;
+            Guid correlationId;
+            IPartner operations;
+
+            customerId.AssertNotEmpty(nameof(customerId));
+            userId.AssertNotEmpty(nameof(userId));
+            entity.AssertNotNull(nameof(entity));
+
+            try
+            {
+                executionTime = DateTime.Now;
+                correlationId = Guid.NewGuid();
+                operations = await GetUserOperationsAsync(correlationId);
+
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
+
+                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId) ||
+                    principal.CustomerId.Equals(customerId))
+                {
+                    user = await operations.Customers.ById(customerId).Users.ById(userId).PatchAsync(entity);
+                }
+                else
+                {
+                    throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
+                }
+
+                // Track the event measurements for analysis.
+                eventMetrics = new Dictionary<string, double>
+                {
+                    { "ElapsedMilliseconds", DateTime.Now.Subtract(executionTime).TotalMilliseconds }
+                };
+
+                // Capture the request for the customer summary for analysis.
+                eventProperties = new Dictionary<string, string>
+                {
+                    { "CustomerId", principal.CustomerId },
+                    { "Name", principal.Name },
+                    { "ParternCenterCorrelationId", correlationId.ToString() }
+                };
+
+                service.Telemetry.TrackEvent(nameof(UpdateUserAsync), eventProperties, eventMetrics);
+
+                return user;
+            }
+            finally
+            {
+                eventMetrics = null;
+                eventProperties = null;
+                operations = null;
+                principal = null;
+            }
+        }
+
+        /// <summary>
+        /// Updates the license assignments for the specified user.
+        /// </summary>
+        /// <param name="customerId">Identifier for the customer.</param>
+        /// <param name="userId">Identifier for the user.</param>
+        /// <param name="entity">An instance of <see cref="LicenseUpdate"/> that represents the license changes to be made.</param>
+        /// <returns>An instance of the <see cref="Task"/> class that represents the asynchronous operation.</returns>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="customerId"/> is empty or null.
+        /// or 
+        /// <paramref name="userId"/> is empty or null.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="entity"/> is null.
+        /// </exception>
+        public async Task UpdateUserLicensesAsync(string customerId, string userId, LicenseUpdate entity)
+        {
+            CustomerPrincipal principal;
+            DateTime executionTime;
+            Dictionary<string, double> eventMetrics;
+            Dictionary<string, string> eventProperties;
+            Guid correlationId;
+            IPartner operations;
+
+            customerId.AssertNotEmpty(nameof(customerId));
+            userId.AssertNotEmpty(nameof(userId));
+            entity.AssertNotNull(nameof(entity));
+
+            try
+            {
+                executionTime = DateTime.Now;
+                correlationId = Guid.NewGuid();
+                operations = await GetUserOperationsAsync(correlationId);
+
+                principal = new CustomerPrincipal(ClaimsPrincipal.Current);
+
+                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId) ||
+                    principal.CustomerId.Equals(customerId))
+                {
+                    await operations.Customers.ById(customerId).Users.ById(userId).LicenseUpdates.CreateAsync(entity);
+                }
+                else
+                {
+                    throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
+                }
+
+                eventMetrics = new Dictionary<string, double>
+                {
+                    { "ElapsedMilliseconds", DateTime.Now.Subtract(executionTime).TotalMilliseconds }
+                };
+
+                eventProperties = new Dictionary<string, string>
+                {
+                    { "CustomerId", principal.CustomerId },
+                    { "Name", principal.Name },
+                    { "ParternCenterCorrelationId", correlationId.ToString() }
+                };
+
+                service.Telemetry.TrackEvent(nameof(UpdateUserLicensesAsync), eventProperties, eventMetrics);
             }
             finally
             {
@@ -923,18 +1576,56 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// </summary>
         /// <param name="correlationId">Correlation identifier for the operation.</param>
         /// <returns>An instance of the partner service.</returns>
-        private async ValueTask<IPartner> GetAppOperationsAsync(Guid correlationId)
+        private async Task<IPartner> GetAppOperationsAsync(Guid correlationId)
         {
-            if (this.appOperations == null || this.appOperations.Credentials.ExpiresAt > DateTime.UtcNow)
+            if (appOperations == null || appOperations.Credentials.ExpiresAt > DateTime.UtcNow)
             {
-                IPartnerCredentials credentials = await this.service.TokenManagement
-                    .GetPartnerCenterAppOnlyCredentialsAsync(
-                        $"{this.service.Configuration.ActiveDirectoryEndpoint}/{this.service.Configuration.PartnerCenterApplicationTenantId}");
+                IPartnerCredentials credentials = await GetPartnerCenterCredentialsAsync();
 
-                this.appOperations = PartnerService.Instance.CreatePartnerOperations(credentials);
+                lock (appLock)
+                {
+                    appOperations = PartnerService.Instance.CreatePartnerOperations(credentials);
+                }
+
+                PartnerService.Instance.ApplicationName = ApplicationName;
             }
 
-            return this.appOperations.With(RequestContextFactory.Instance.Create(correlationId));
+            // TODO -- Add localization
+            // return appOperations.With(RequestContextFactory.Instance.Create(correlationId, service.Localization.Locale));
+            return appOperations.With(RequestContextFactory.Instance.Create(correlationId));
+        }
+
+        /// <summary>
+        /// Gets an instance of <see cref="IPartnerCredentials"/> used to access the Partner Center Managed API.
+        /// </summary>
+        /// <param name="authority">Address of the authority to issue the token.</param>
+        /// <returns>
+        /// An instance of <see cref="IPartnerCredentials" /> that represents the access token.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="authority"/> is empty or null.
+        /// </exception>
+        private async Task<IPartnerCredentials> GetPartnerCenterCredentialsAsync()
+        {
+            // Attempt to obtain the Partner Center token from the cache.
+            IPartnerCredentials credentials =
+                 await service.Cache.FetchAsync<Models.PartnerCenterToken>(
+                     CacheDatabaseType.Authentication, PartnerCenterCacheKey);
+
+            if (credentials != null && !credentials.IsExpired())
+            {
+                return credentials;
+            }
+
+            // The access token has expired, so a new one must be requested.
+            credentials = await PartnerCredentials.Instance.GenerateByApplicationCredentialsAsync(
+                service.Configuration.PartnerCenterApplicationId,
+                service.Configuration.PartnerCenterApplicationSecret.ToUnsecureString(),
+                service.Configuration.PartnerCenterApplicationTenantId);
+
+            await service.Cache.StoreAsync(CacheDatabaseType.Authentication, PartnerCenterCacheKey, credentials);
+
+            return credentials;
         }
 
         /// <summary>
@@ -942,18 +1633,26 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// </summary>
         /// <param name="correlationId">Correlation identifier for the operation.</param>
         /// <returns>An instance of the partner service.</returns>
-        private async ValueTask<IPartner> GetUserOperationsAsync(Guid correlationId)
+        private async Task<IPartner> GetUserOperationsAsync(Guid correlationId)
         {
-            if (this.userOperations == null || this.userOperations.Credentials.ExpiresAt > DateTime.UtcNow)
-            {
-                IPartnerCredentials credentials = await this.service.TokenManagement
-                    .GetPartnerCenterAppPlusUserCredentialsAsync(
-                        $"{this.service.Configuration.ActiveDirectoryEndpoint}/{this.service.Configuration.PartnerCenterApplicationTenantId}");
+            AuthenticationResult token = await service.AccessToken.GetAccessTokenAsync(
+                $"{service.Configuration.ActiveDirectoryEndpoint}/{service.Configuration.PartnerCenterApplicationTenantId}",
+                service.Configuration.PartnerCenterEndpoint,
+                new Models.ApplicationCredential
+                {
+                    ApplicationId = service.Configuration.ApplicationId,
+                    ApplicationSecret = service.Configuration.ApplicationSecret,
+                    UseCache = true
+                },
+                service.AccessToken.UserAssertionToken);
 
-                this.userOperations = PartnerService.Instance.CreatePartnerOperations(credentials);
-            }
+            IPartnerCredentials credentials = await PartnerCredentials.Instance.GenerateByUserCredentialsAsync(
+                service.Configuration.ApplicationId,
+                new AuthenticationToken(token.AccessToken, token.ExpiresOn));
 
-            return this.userOperations.With(RequestContextFactory.Instance.Create(correlationId));
+            IAggregatePartner userOperations = PartnerService.Instance.CreatePartnerOperations(credentials);
+
+            return userOperations.With(RequestContextFactory.Instance.Create(correlationId));
         }
     }
 }

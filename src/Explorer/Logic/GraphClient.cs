@@ -12,6 +12,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
     using System.Threading.Tasks;
     using Microsoft.Azure.ActiveDirectory.GraphClient;
     using Microsoft.Azure.ActiveDirectory.GraphClient.Extensions;
+    using Microsoft.IdentityModel.Clients.ActiveDirectory;
     using Models;
 
     /// <summary>
@@ -58,11 +59,17 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                 new Uri($"{this.service.Configuration.GraphEndpoint}/{customerId}"),
                 async () =>
                 {
-                    AuthenticationToken token = await this.service.TokenManagement.GetAppOnlyTokenAsync(
+                    AuthenticationResult token = await service.AccessToken.GetAccessTokenAsync(
                         $"{this.service.Configuration.ActiveDirectoryEndpoint}/{customerId}",
-                        this.service.Configuration.GraphEndpoint);
+                        service.Configuration.GraphEndpoint,
+                        new ApplicationCredential
+                        {
+                            ApplicationId = service.Configuration.ApplicationId,
+                            ApplicationSecret = service.Configuration.ApplicationSecret,
+                            UseCache = true
+                        });
 
-                    return token.Token;
+                    return token.AccessToken;
                 });
         }
 
@@ -120,7 +127,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                         }));
                     }
 
-                    if (this.customerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
+                    if (customerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
                     {
                         groups = memberships.CurrentPage.OfType<Group>().Where(
                             g => g.DisplayName.Equals("AdminAgents") || g.DisplayName.Equals("HelpdeskAgents")).ToList();

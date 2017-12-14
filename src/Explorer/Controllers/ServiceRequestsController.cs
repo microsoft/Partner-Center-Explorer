@@ -38,7 +38,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// </returns>
         public ActionResult Index()
         {
-            return this.View();
+            return View();
         }
 
         /// <summary>
@@ -49,10 +49,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         {
             ServiceRequestsModel serviceRequestsModel = new ServiceRequestsModel()
             {
-                ServiceRequests = await this.GetServiceRequestsAsync()
+                ServiceRequests = await GetServiceRequestsAsync()
             };
 
-            return this.PartialView(serviceRequestsModel);
+            return PartialView(serviceRequestsModel);
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                requests = await this.Service.PartnerCenter.ServiceRequests.GetAsync();
+                requests = await Service.PartnerOperations.GetServiceRequestsAsync();
 
                 return requests.Items.Select(r => new ServiceRequestModel()
                 {

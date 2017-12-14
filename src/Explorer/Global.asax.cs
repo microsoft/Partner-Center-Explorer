@@ -6,12 +6,13 @@
 
 namespace Microsoft.Store.PartnerCenter.Explorer
 {
+    using System.Threading.Tasks;
     using System.Web;
     using System.Web.Mvc;
     using System.Web.Optimization;
     using System.Web.Routing;
     using Logic;
-    using Practices.Unity;
+    using Unity;
 
     /// <summary>
     /// Defines the methods and properties that are common to application objects.
@@ -38,6 +39,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer
                 UnityContainer = UnityConfig.GetConfiguredContainer();
 
                 service = UnityContainer.Resolve<IExplorerService>();
+
+                Task.Run(service.InitializeAsync).Wait();
 
                 ApplicationInsights.Extensibility.TelemetryConfiguration.Active.InstrumentationKey =
                     service.Configuration.InstrumentationKey;

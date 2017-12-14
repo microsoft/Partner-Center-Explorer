@@ -15,11 +15,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
     public interface ICacheService
     {
         /// <summary>
-        /// Gets a value indicating whether caching is enabled.
-        /// </summary>
-        bool IsEnabled { get; }
-
-        /// <summary>
         /// Removes all entities from the specified cache database. 
         /// </summary>
         /// <param name="database">Cache database type where the data is stored.</param>
@@ -63,7 +58,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         /// <exception cref="ArgumentException">
         /// <paramref name="key"/> is null.
         /// </exception>
-        ValueTask<TEntity> FetchAsync<TEntity>(CacheDatabaseType database, string key) where TEntity : class;
+        Task<TEntity> FetchAsync<TEntity>(CacheDatabaseType database, string key) where TEntity : class;
 
         /// <summary>
         /// Stores the specified entity in the cache.

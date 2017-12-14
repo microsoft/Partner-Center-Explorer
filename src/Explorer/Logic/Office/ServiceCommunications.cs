@@ -9,6 +9,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Office
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
+    using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
     /// <summary>
     /// Facilities interactions with the Office 365 Service Communications API.
@@ -18,7 +19,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Office
         /// <summary>
         /// Authentication token that should be utilized the requests.
         /// </summary>
-        private readonly AuthenticationToken token;
+        private readonly AuthenticationResult token;
 
         /// <summary>
         /// Provides access to core services.
@@ -36,7 +37,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Office
         /// <exception cref="System.ArgumentNullException">
         /// <paramref name="service"/> is null.
         /// </exception>
-        public ServiceCommunications(IExplorerService service, AuthenticationToken token)
+        public ServiceCommunications(IExplorerService service, AuthenticationResult token)
         {
             service.AssertNotNull(nameof(service));
             this.service = service;
@@ -46,25 +47,25 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Office
         /// <summary>
         /// Gets the current status for the specified tenant.
         /// </summary>
-        /// <param name="tenantId">The tenant identifier.</param>
+        /// <param name="customerId">Identifier for the customer.</param>
         /// <returns>A list of health events associated with the specified tenant identifier.</returns>
         /// <exception cref="System.ArgumentNullException">
-        /// <paramref name="tenantId"/> is empty or null.
+        /// <paramref name="customerId"/> is empty or null.
         /// </exception>
-        public async Task<List<IHealthEvent>> GetCurrentStatusAsync(string tenantId)
+        public async Task<List<IHealthEvent>> GetCurrentStatusAsync(string customerId)
         {
             Result<OfficeHealthEvent> records;
             string requestUri;
 
-            tenantId.AssertNotEmpty(nameof(tenantId));
+            customerId.AssertNotEmpty(nameof(customerId));
 
             try
             {
-                requestUri = $"{this.service.Configuration.OfficeManagementEndpoint}/api/v1.0/{tenantId}/ServiceComms/CurrentStatus";
+                requestUri = $"{service.Configuration.OfficeManagementEndpoint}/api/v1.0/{customerId}/ServiceComms/CurrentStatus";
 
-                records = await this.service.Communication.GetAsync<Result<OfficeHealthEvent>>(
+                records = await service.Communication.GetAsync<Result<OfficeHealthEvent>>(
                     requestUri,
-                    this.token.Token);
+                    token.AccessToken);
 
                 return records.Value.ToList<IHealthEvent>();
             }

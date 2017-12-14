@@ -11,7 +11,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     using System.Web.Mvc;
     using Logic;
     using Models;
-    using PartnerCenter.Models.Query;
     using Security;
 
     /// <summary>
@@ -39,10 +38,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         {
             AuditRecordsModel auditRecordsModel = new AuditRecordsModel()
             {
-                Records = await this.Service.PartnerCenter.AuditRecords.QueryAsync(startDate, endDate, QueryFactory.Instance.BuildSimpleQuery())
+                Records = await this.Service.PartnerOperations.GetAuditRecordsAsync(startDate, endDate)
             };
 
-            return this.PartialView("Records", auditRecordsModel);
+            return PartialView("Records", auditRecordsModel);
         }
 
         /// <summary>

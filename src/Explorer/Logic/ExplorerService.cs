@@ -6,6 +6,7 @@
 
 namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 {
+    using System.Threading.Tasks;
     using Cache;
     using Configuration;
     using Security;
@@ -16,6 +17,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
     /// </summary>
     public class ExplorerService : IExplorerService
     {
+        /// <summary>
+        /// Provides the ability to manage access tokens.
+        /// </summary>
+        private static IAccessTokenProvider accessToken;
+
         /// <summary>
         /// Provides the ability to cache often used objects. 
         /// </summary>
@@ -42,14 +48,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         private static ITelemetryProvider telemetry;
 
         /// <summary>
-        /// Provides the ability to manage access tokens.
-        /// </summary>
-        private static ITokenManagement tokenManagement;
-
-        /// <summary>
         /// Provides the ability to securely access and store resources.
         /// </summary>
         private static IVaultService vault;
+
+        /// <summary>
+        /// Gets the a reference to the token management service.
+        /// </summary>
+        public IAccessTokenProvider AccessToken => accessToken ?? (accessToken = new AccessTokenProvider(this));
 
         /// <summary>
         /// Gets the service that provides caching functionality.
@@ -70,13 +76,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// Gets a reference to the partner operations.
         /// </summary>
         public IPartnerOperations PartnerOperations => partnerOperations ?? (partnerOperations = new PartnerOperations(this));
-
-        /// <summary>
-        /// Gets the Partner Center service reference.
-        /// </summary>
-        public IAggregatePartner PartnerCenter => PartnerService.Instance.CreatePartnerOperations(
-               this.TokenManagement.GetPartnerCenterAppOnlyCredentials(
-               $"{this.Configuration.ActiveDirectoryEndpoint}/{this.Configuration.PartnerCenterApplicationTenantId}"));
 
         /// <summary>
         /// Gets the telemetry service reference.
@@ -104,13 +103,17 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         }
 
         /// <summary>
-        /// Gets the a reference to the token management service.
-        /// </summary>
-        public ITokenManagement TokenManagement => tokenManagement ?? (tokenManagement = new TokenManagement(this));
-
-        /// <summary>
         /// Gets a reference to the vault service.
         /// </summary>
         public IVaultService Vault => vault ?? (vault = new VaultService(this));
+
+        /// <summary>
+        /// Initializes this instance of the <see cref="ReportProvider"/> class.
+        /// </summary>
+        /// <returns>An instance of <see cref="Task"/> that represents the asynchronous operation.</returns>
+        public async Task InitializeAsync()
+        {
+            await Configuration.InitializeAsync();
+        }
     }
 }

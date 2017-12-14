@@ -18,7 +18,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
     using Owin.Security.OpenIdConnect;
     using PartnerCenter.Exceptions;
     using PartnerCenter.Models.Customers;
-    using Practices.Unity;
+    using Unity;
 
     /// <summary>
     /// Provides methods and properties used to start the application.

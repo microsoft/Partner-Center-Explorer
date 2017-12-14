@@ -8,14 +8,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 {
     using System;
     using System.Web.Mvc;
-    using Practices.Unity;
+    using Unity;
 
     /// <summary>
     /// Represents custom handle error attribute that logs the exception to the configured telemetry provider.
     /// </summary>
     /// <seealso cref="HandleErrorAttribute" />
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = true, AllowMultiple = true)]
-    public class TelemetryHandleErrorAttribute : HandleErrorAttribute
+    public sealed class TelemetryHandleErrorAttribute : HandleErrorAttribute
     {
         /// <summary>
         /// Called when an exception occurs.

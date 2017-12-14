@@ -6,6 +6,7 @@
 
 namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 {
+    using System.Threading.Tasks;
     using Cache;
     using Configuration;
     using Security;
@@ -16,6 +17,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
     /// </summary>
     public interface IExplorerService
     {
+        /// <summary>
+        /// Gets a reference to the token management service.
+        /// </summary>
+        IAccessTokenProvider AccessToken { get; }
+
         /// <summary>
         /// Gets the service that provides caching functionality.
         /// </summary>
@@ -32,11 +38,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         ICommunication Communication { get; }
 
         /// <summary>
-        /// Gets the Partner Center service reference.
-        /// </summary>
-        IAggregatePartner PartnerCenter { get; }
-
-        /// <summary>
         /// Gets a reference to the partner operations.
         /// </summary>
         IPartnerOperations PartnerOperations { get; }
@@ -47,13 +48,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         ITelemetryProvider Telemetry { get; }
 
         /// <summary>
-        /// Gets a reference to the token management service.
-        /// </summary>
-        ITokenManagement TokenManagement { get; }
-
-        /// <summary>
         /// Gets a reference to the vault service. 
         /// </summary>
         IVaultService Vault { get; }
+
+        /// <summary>
+        /// Initializes this instance of the <see cref="ReportProvider"/> class.
+        /// </summary>
+        /// <returns>An instance of <see cref="Task"/> that represents the asynchronous operation.</returns>
+        Task InitializeAsync();
     }
 }

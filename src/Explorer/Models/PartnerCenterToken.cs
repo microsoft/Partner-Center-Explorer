@@ -1,5 +1,5 @@
 ﻿// -----------------------------------------------------------------------
-// <copyright file="PartnerCenterTokenModel.cs" company="Microsoft">
+// <copyright file="PartnerCenterToken.cs" company="Microsoft">
 //     Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
 // -----------------------------------------------------------------------
@@ -9,10 +9,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
     using System;
 
     /// <summary>
-    /// Represents an access token used to access the Partner Center API.
+    /// Represents an access token used to access Partner Center.
     /// </summary>
-    /// <seealso cref="Microsoft.Store.PartnerCenter.IPartnerCredentials" />
-    public class PartnerCenterTokenModel : IPartnerCredentials
+    /// <seealso cref="IPartnerCredentials" />
+    internal sealed class PartnerCenterToken : IPartnerCredentials
     {
         /// <summary>
         /// Gets the expiry time in UTC for the token.
@@ -40,7 +40,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
         /// </remarks>
         public bool IsExpired()
         {
-            return DateTime.UtcNow >= this.ExpiresAt;
+            return DateTime.UtcNow >= ExpiresAt;
         }
     }
 }

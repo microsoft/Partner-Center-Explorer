@@ -9,12 +9,87 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
     using System;
     using System.ComponentModel;
     using System.Linq;
+    using System.Runtime.InteropServices;
+    using System.Security;
 
     /// <summary>
     /// Provides useful methods used for validation.
     /// </summary>
     internal static class Extensions
     {
+        /// <summary>
+        /// Gets the text from the description attribute.
+        /// </summary>
+        /// <param name="value">The enumeration value associated with the attribute.</param>
+        /// <returns>A <see cref="string"/> containing the text from the description attribute.</returns>
+        public static string GetDescription(this Enum value)
+        {
+            DescriptionAttribute attribute;
+
+            try
+            {
+                attribute = value.GetType()
+                    .GetField(value.ToString())
+                    .GetCustomAttributes(typeof(DescriptionAttribute), false)
+                    .SingleOrDefault() as DescriptionAttribute;
+
+                return attribute == null ? value.ToString() : attribute.Description;
+            }
+            finally
+            {
+                attribute = null;
+            }
+        }
+
+        /// <summary>
+        /// Converts the string value to an instance of <see cref="SecureString"/>.
+        /// </summary>
+        /// <param name="value">The string value to be converted.</param>
+        /// <returns>An instance of <see cref="SecureString"/> that represents the string.</returns>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="value"/> is empty or null.
+        /// </exception>
+        public static SecureString ToSecureString(this string value)
+        {
+            SecureString secureValue = new SecureString();
+
+            value.AssertNotEmpty(nameof(value));
+
+            foreach (char c in value)
+            {
+                secureValue.AppendChar(c);
+            }
+
+            secureValue.MakeReadOnly();
+
+            return secureValue;
+        }
+
+        /// <summary>
+        /// Converts an instance of <see cref="SecureString"/> to a <see cref="string"/>.
+        /// </summary>
+        /// <param name="secureString">Secure string to be converted.</param>
+        /// <returns>An instance of <see cref="string"/> that represents the <see cref="SecureString"/> value.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="secureString"/> is null.
+        /// </exception>
+        public static string ToUnsecureString(this SecureString secureString)
+        {
+            IntPtr unmanagedString = IntPtr.Zero;
+
+            secureString.AssertNotNull(nameof(secureString));
+
+            try
+            {
+                unmanagedString = Marshal.SecureStringToGlobalAllocUnicode(secureString);
+                return Marshal.PtrToStringUni(unmanagedString);
+            }
+            finally
+            {
+                Marshal.ZeroFreeGlobalAllocUnicode(unmanagedString);
+            }
+        }
+
         /// <summary>
         /// Ensures that a string is not empty.
         /// </summary>
@@ -44,30 +119,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             if (objectToValidate == null)
             {
                 throw new ArgumentNullException(caption);
-            }
-        }
-
-        /// <summary>
-        /// Gets the text from the description attribute.
-        /// </summary>
-        /// <param name="value">The enumeration value associated with the attribute.</param>
-        /// <returns>A <see cref="string"/> containing the text from the description attribute.</returns>
-        public static string GetDescription(this Enum value)
-        {
-            DescriptionAttribute attribute;
-
-            try
-            {
-                attribute = value.GetType()
-                    .GetField(value.ToString())
-                    .GetCustomAttributes(typeof(DescriptionAttribute), false)
-                    .SingleOrDefault() as DescriptionAttribute;
-
-                return attribute == null ? value.ToString() : attribute.Description;
-            }
-            finally
-            {
-                attribute = null;
             }
         }
     }

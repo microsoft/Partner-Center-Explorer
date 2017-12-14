@@ -7,8 +7,9 @@
 namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
 {
     using System;
-    using System.Collections.Generic;
     using System.Configuration;
+    using System.Security;
+    using System.Threading.Tasks;
     using Logic;
 
     /// <summary>
@@ -32,7 +33,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
         public Configuration(IExplorerService service)
         {
             service.AssertNotNull(nameof(service));
-
             this.service = service;
         }
 
@@ -49,7 +49,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
         /// <summary>
         /// Gets the application secret value.
         /// </summary>
-        public string ApplicationSecret => this.GetConfigurationValue("ApplicationSecret");
+        public SecureString ApplicationSecret { get; private set; }
 
         /// <summary>
         /// Gets the application tenant identifier.
@@ -72,6 +72,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
         public string InstrumentationKey => ConfigurationManager.AppSettings["InstrumentationKey"];
 
         /// <summary>
+        /// Gets the endpoint address for the instance of Key Vault.
+        /// </summary>
+        public string KeyVaultEndpoint => ConfigurationManager.AppSettings["KeyVaultEndpoint"];
+
+        /// <summary>
         /// Gets a value indicating whether or not the reseller tenant is the TIP tenant.
         /// </summary>
         public bool IsIntegrationSandbox => Convert.ToBoolean(ConfigurationManager.AppSettings["IsIntegrationSandbox"]);
@@ -89,7 +94,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
         /// <summary>
         /// Gets the Partner Center application secret.
         /// </summary>
-        public string PartnerCenterApplicationSecret => this.GetConfigurationValue("PartnerCenterApplicationSecret");
+        public SecureString PartnerCenterApplicationSecret { get; private set; }
 
         /// <summary>
         /// Gets the Partner Center application tenant identifier.
@@ -104,82 +109,17 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
         /// <summary>
         /// Gets the Redis Cache connection string.
         /// </summary>
-        public string RedisCacheConnectionString => this.GetConfigurationValue("RedisCacheConnectionString");
+        public SecureString RedisCacheConnectionString { get; private set; }
 
         /// <summary>
-        /// Gets the storage account key.
+        /// Performs the necessary initialization operations.
         /// </summary>
-        public string StorageAccountKey => this.GetConfigurationValue("StorageAccountKey");
-
-        /// <summary>
-        /// Gets the vault application identifier.
-        /// </summary>
-        public string VaultApplicationId => ConfigurationManager.AppSettings["VaultApplicationId"];
-
-        /// <summary>
-        /// Gets the vault application certificate thumbprint.
-        /// </summary>
-        public string VaultApplicationCertThumbprint => ConfigurationManager.AppSettings["VaultApplicationCertThumbprint"];
-
-        /// <summary>
-        /// Gets the vault application tenant identifier.
-        /// </summary>
-        public string VaultApplicationTenantId => ConfigurationManager.AppSettings["VaultApplicationTenantId"];
-
-        /// <summary>
-        /// Gets the vault identifier value.
-        /// </summary>
-        public string VaultBaseAddress => ConfigurationManager.AppSettings["VaultBaseAddress"];
-
-        /// <summary>
-        /// Gets the configuration value.
-        /// </summary>
-        /// <param name="identifier">Identifier of the resource being requested.</param>
-        /// <returns>A string represented the value of the configuration.</returns>
-        /// <exception cref="System.ArgumentException">
-        /// <paramref name="identifier"/> is empty or null.
-        /// </exception>
-        private string GetConfigurationValue(string identifier)
+        /// <returns>An instance of the  <see cref="Task"/> class that represents the asynchronous operation.</returns>
+        public async Task InitializeAsync()
         {
-            DateTime startTime;
-            Dictionary<string, double> eventMetrics;
-            Dictionary<string, string> eventProperties;
-            string value;
-
-            identifier.AssertNotNull(nameof(identifier));
-
-            try
-            {
-                startTime = DateTime.Now;
-
-                value = this.service.Vault.Get(identifier);
-
-                if (string.IsNullOrEmpty(value))
-                {
-                    value = ConfigurationManager.AppSettings[identifier];
-                }
-
-                // Track the event measurements for analysis.
-                eventMetrics = new Dictionary<string, double>
-                {
-                    { "ElapsedMilliseconds", DateTime.Now.Subtract(startTime).TotalMilliseconds }
-                };
-
-                // Capture the request for the customer summary for analysis.
-                eventProperties = new Dictionary<string, string>
-                {
-                    { "Identifier", identifier }
-                };
-
-                this.service.Telemetry.TrackEvent("Configuration/GetConfigurationValue", eventProperties, eventMetrics);
-
-                return value;
-            }
-            finally
-            {
-                eventMetrics = null;
-                eventProperties = null;
-            }
+            ApplicationSecret = await service.Vault.GetAsync("ApplicationSecret");
+            PartnerCenterApplicationSecret = await service.Vault.GetAsync("PartnerCenterApplicationSecret");
+            RedisCacheConnectionString = await service.Vault.GetAsync("RedisCacheConnectionString");
         }
     }
 }

@@ -9,6 +9,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Microsoft.Store.PartnerCenter.Models;
+    using Microsoft.Store.PartnerCenter.Models.Auditing;
+    using Microsoft.Store.PartnerCenter.Models.Licenses;
+    using Microsoft.Store.PartnerCenter.Models.ServiceRequests;
+    using Microsoft.Store.PartnerCenter.Models.Users;
     using PartnerCenter.Models.Customers;
     using PartnerCenter.Models.Invoices;
     using PartnerCenter.Models.Offers;
@@ -21,6 +26,13 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
     /// </summary>
     public interface IPartnerOperations
     {
+        /// <summary>
+        /// Checks if the specified domain is available.
+        /// </summary>
+        /// <param name="domain">Domain to be cheked for availability.</param>
+        /// <returns><c>true</c> if the domain is available; otherwise <c>false</c></returns>
+        Task<bool> CheckDomainAsync(string domain);
+
         /// <summary>
         /// Creates the customer represented by the instance of <see cref="Customer"/>.
         /// </summary>
@@ -37,6 +49,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         Task<Order> CreateOrderAsync(string customerId, Order newOrder);
 
         /// <summary>
+        /// Creates the specified user.
+        /// </summary>
+        /// <param name="customerId">Identifier of the customer.</param>
+        /// <param name="newEntity">An aptly populated instance of <see cref="CustomerUser"/>.</param>
+        /// <returns>An instance of <see cref="CustomerUser"/> representing the new user.</returns>
+        Task<CustomerUser> CreateUserAsync(string customerId, CustomerUser newEntity);
+
+        /// <summary>
         /// Deletes the specified customer. This operation is only valid when connected to the 
         /// integration sandbox tenant.
         /// </summary>
@@ -45,11 +65,34 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         Task DeleteCustomerAsync(string customerId);
 
         /// <summary>
+        /// Deletes the specified user.
+        /// </summary>
+        /// <param name="customerId">Identifier of the customer.</param>
+        /// <param name="userId">Identifier of the user.</param>
+        /// <returns>An instance of <see cref="Task"/> that represents the asynchronous operation.</returns>
+        Task DeleteUserAsync(string customerId, string userId);
+
+        /// <summary>
         /// Gets the specified customer.
         /// </summary>
         /// <param name="customerId">Identifier for the customer.</param>
         /// <returns>An instance of <see cref="Customer"/> that represents the specified customer.</returns>
         Task<Customer> GetCustomerAsync(string customerId);
+
+        /// <summary>
+        /// Gets the subscribed SKUs for the specified customer.
+        /// </summary>
+        /// <param name="customerId">Identifier for the customer.</param>
+        /// <returns>A collection of SKUs that where the customer has subscribed.</returns>
+        Task<ResourceCollection<SubscribedSku>> GetCustomerSubscribedSkusAsync(string customerId);
+
+        /// <summary>
+        /// Get the audit records available for the defined time period.
+        /// </summary>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <returns></returns>
+        Task<SeekBasedResourceCollection<AuditRecord>> GetAuditRecordsAsync(DateTime startTime, DateTime endTime);
 
         /// <summary>
         /// Gets the available customers.
@@ -104,11 +147,33 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         Task<List<Offer>> GetOffersAsync();
 
         /// <summary>
+        /// Gets a list of service requests.
+        /// </summary>
+        /// <returns>A list of service requests.</returns>
+        Task<ResourceCollection<ServiceRequest>> GetServiceRequestsAsync();
+
+        /// <summary>
         /// Gets the subscriptions for the specified customer.
         /// </summary>
         /// <param name="customerId">Identifier for the customer.</param>
         /// <returns>A list of subscriptions for the customer.</returns>
         Task<List<Subscription>> GetSubscriptionsAsync(string customerId);
+
+        /// <summary>
+        /// Gets the specified user.
+        /// </summary>
+        /// <param name="customerId">Identifier for the customer.</param>
+        /// <param name="userId">Identifier for the user.</param>
+        /// <returns>An instance of <see cref="CustomerUser"/> that represents the requested user.</returns>
+        Task<CustomerUser> GetUserAsync(string customerId, string userId);
+
+        /// <summary>
+        /// Gets the licenses assigned to the specified user.
+        /// </summary>
+        /// <param name="customerId">Identifier for the customer.</param>
+        /// <param name="userId">Identifier for the user.</param>
+        /// <returns>A collection of licenses assigned to the user.</returns>
+        Task<ResourceCollection<License>> GetUserLicensesAsync(string customerId, string userId);
 
         /// <summary>
         /// Updates the specified subscription.
@@ -117,5 +182,23 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// <param name="subscription">An instance of <see cref="Subscription"/>.</param>
         /// <returns>An instance of <see cref="Subscription"/> that represents the modified subscription.</returns>
         Task<Subscription> UpdateSubscriptionAsync(string customerId, Subscription subscription);
+
+        /// <summary>
+        /// Updates the specified user.
+        /// </summary>
+        /// <param name="customerId">Identifier for the customer.</param>
+        /// <param name="userId">Identifier for the user.</param>
+        /// <param name="user">An aptly populated instance of the <see cref="CustomerUser"/> class.</param>
+        /// <returns>An instance of <see cref="CustomerUser"/> that represents the updated user.</returns>
+        Task<CustomerUser> UpdateUserAsync(string customerId, string userId, CustomerUser user);
+
+        /// <summary>
+        /// Updates the license assignments for the specified user.
+        /// </summary>
+        /// <param name="customerId">Identifier for the customer.</param>
+        /// <param name="userId">Identifier for the user.</param>
+        /// <param name="entity">An instance of <see cref="LicenseUpdate"/> that represents the license changes to be made.</param>
+        /// <returns>An instance of the <see cref="Task"/> class that represents the asynchronous operation.</returns>
+        Task UpdateUserLicensesAsync(string customerId, string userId, LicenseUpdate entity);
     }
 }

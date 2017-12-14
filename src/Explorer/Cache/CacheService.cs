@@ -74,11 +74,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         }
 
         /// <summary>
-        /// Gets a value indicating whether caching is enabled.
-        /// </summary>
-        public bool IsEnabled => !string.IsNullOrEmpty(this.service.Configuration.RedisCacheConnectionString);
-
-        /// <summary>
         /// Removes all entities from the specified cache database. 
         /// </summary>
         /// <param name="database">Cache database type where the data is stored.</param>
@@ -90,15 +85,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
 
             try
             {
-                if (!this.IsEnabled)
-                {
-                    return;
-                }
-
                 if (this.connection == null)
                 {
                     this.connection = await ConnectionMultiplexer.ConnectAsync(
-                        this.service.Configuration.RedisCacheConnectionString);
+                        this.service.Configuration.RedisCacheConnectionString.ToUnsecureString());
                 }
 
                 endpoints = this.connection.GetEndPoints(true);
@@ -129,11 +119,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         {
             key.AssertNotEmpty(nameof(key));
 
-            if (!this.IsEnabled)
-            {
-                return;
-            }
-
             IDatabase cache = this.GetCacheReference(database);
 
             await cache.KeyDeleteAsync(key);
@@ -155,11 +140,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         {
             key.AssertNotEmpty(nameof(key));
 
-            if (!this.IsEnabled)
-            {
-                return null;
-            }
-
             IDatabase cache = this.GetCacheReference(database);
             RedisValue value = cache.StringGet(key);
 
@@ -179,14 +159,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         /// <exception cref="ArgumentException">
         /// <paramref name="key"/> is empty or null.
         /// </exception>
-        public async ValueTask<TEntity> FetchAsync<TEntity>(CacheDatabaseType database, string key) where TEntity : class
+        public async Task<TEntity> FetchAsync<TEntity>(CacheDatabaseType database, string key) where TEntity : class
         {
             key.AssertNotEmpty(nameof(key));
-
-            if (!this.IsEnabled)
-            {
-                return null;
-            }
 
             IDatabase cache = this.GetCacheReference(database);
             RedisValue value = await cache.StringGetAsync(key);
@@ -215,11 +190,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
             key.AssertNotEmpty(nameof(key));
             entity.AssertNotNull(nameof(entity));
 
-            if (!this.IsEnabled)
-            {
-                return;
-            }
-
             IDatabase cache = await this.GetCacheReferenceAsync(database);
             await cache.StringSetAsync(
                 key, this.protector.Protect(JsonConvert.SerializeObject(entity)), expiration);
@@ -236,15 +206,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
 
             try
             {
-                if (!this.IsEnabled)
-                {
-                    return;
-                }
-
                 if (this.connection == null)
                 {
                     this.connection = ConnectionMultiplexer.Connect(
-                        this.service.Configuration.RedisCacheConnectionString);
+                        this.service.Configuration.RedisCacheConnectionString.ToUnsecureString());
                 }
 
                 endpoints = this.connection.GetEndPoints(true);
@@ -274,11 +239,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         {
             key.AssertNotEmpty(nameof(key));
 
-            if (!this.IsEnabled)
-            {
-                return;
-            }
-
             IDatabase cache = this.GetCacheReference(database);
             cache.KeyDelete(key);
         }
@@ -303,11 +263,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
             key.AssertNotEmpty(nameof(key));
             entity.AssertNotNull(nameof(entity));
 
-            if (!this.IsEnabled)
-            {
-                return;
-            }
-
             IDatabase cache = this.GetCacheReference(cacheDatabase);
             cache.StringSet(
                 key, this.protector.Protect(JsonConvert.SerializeObject(entity)), expiration);
@@ -328,7 +283,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
             try
             {
                 this.connection = ConnectionMultiplexer.Connect(
-                    this.service.Configuration.RedisCacheConnectionString);
+                    this.service.Configuration.RedisCacheConnectionString.ToUnsecureString());
 
                 return this.connection.GetDatabase((int)database);
             }
@@ -353,7 +308,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
             try
             {
                 this.connection = await ConnectionMultiplexer.ConnectAsync(
-                    this.service.Configuration.RedisCacheConnectionString);
+                    this.service.Configuration.RedisCacheConnectionString.ToUnsecureString());
 
                 return this.connection.GetDatabase((int)database);
             }

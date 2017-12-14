@@ -8,7 +8,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
 {
     using System;
     using Logic;
-    using Practices.Unity;
+    using Unity;
 
     /// <summary>
     /// Provides configurations for Unity.

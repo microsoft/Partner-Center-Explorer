@@ -6,6 +6,9 @@
 
 namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
 {
+    using System.Security;
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Represents the ability to reference various configurations. 
     /// </summary>
@@ -22,14 +25,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
         string ApplicationId { get; }
 
         /// <summary>
+        /// Gets the application secret value.
+        /// </summary>
+        SecureString ApplicationSecret { get; }
+
+        /// <summary>
         /// Gets the application tenant identifier.
         /// </summary>
         string ApplicationTenantId { get; }
-
-        /// <summary>
-        /// Gets the application secret value.
-        /// </summary>
-        string ApplicationSecret { get; }
 
         /// <summary>
         /// Gets the Azure Resource Manager endpoint address.
@@ -52,6 +55,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
         bool IsIntegrationSandbox { get; }
 
         /// <summary>
+        /// Gets the endpoint address for the instance of Key Vault.
+        /// </summary>
+        string KeyVaultEndpoint { get; }
+
+        /// <summary>
         /// Gets the Office 365 Management endpoint address.
         /// </summary>
         string OfficeManagementEndpoint { get; }
@@ -64,7 +72,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
         /// <summary>
         /// Gets the Partner Center application secret.
         /// </summary>
-        string PartnerCenterApplicationSecret { get; }
+        SecureString PartnerCenterApplicationSecret { get; }
 
         /// <summary>
         /// Gets the Partner Center application tenant identifier.
@@ -79,26 +87,12 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
         /// <summary>
         /// Gets the Redis Cache connection string.
         /// </summary>
-        string RedisCacheConnectionString { get; }
+        SecureString RedisCacheConnectionString { get; }
 
         /// <summary>
-        /// Gets the vault application identifier.
+        /// Performs the necessary initialization operations.
         /// </summary>
-        string VaultApplicationId { get; }
-
-        /// <summary>
-        /// Gets the vault application certificate thumbprint.
-        /// </summary>
-        string VaultApplicationCertThumbprint { get; }
-
-        /// <summary>
-        /// Gets the vault application tenant identifier.
-        /// </summary>
-        string VaultApplicationTenantId { get; }
-
-        /// <summary>
-        /// Gets the vault base address.
-        /// </summary>
-        string VaultBaseAddress { get; }
+        /// <returns>An instance of the  <see cref="Task"/> class that represents the asynchronous operation.</returns>
+        Task InitializeAsync();
     }
 }

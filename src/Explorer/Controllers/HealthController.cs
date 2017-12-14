@@ -13,6 +13,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     using Logic;
     using Logic.Azure;
     using Logic.Office;
+    using Microsoft.IdentityModel.Clients.ActiveDirectory;
     using Models;
     using PartnerCenter.Models.Customers;
     using PartnerCenter.Models.Invoices;
@@ -55,8 +56,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                customer = await this.Service.PartnerCenter.Customers.ById(customerId).GetAsync();
-                subscription = await this.Service.PartnerCenter.Customers.ById(customerId).Subscriptions.ById(subscriptionId).GetAsync();
+                customer = await Service.PartnerOperations.GetCustomerAsync(customerId);
+                subscription = await Service.PartnerOperations.GetSubscriptionAsync(customerId, subscriptionId);
 
                 healthModel = new SubscriptionHealthModel
                 {
@@ -69,14 +70,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
                 if (subscription.BillingType == BillingType.Usage)
                 {
-                    healthModel.HealthEvents = await this.GetAzureSubscriptionHealthAsync(customerId, subscriptionId);
+                    healthModel.HealthEvents = await GetAzureSubscriptionHealthAsync(customerId, subscriptionId);
                 }
                 else
                 {
-                    healthModel.HealthEvents = await this.GetOfficeSubscriptionHealthAsync(customerId);
+                    healthModel.HealthEvents = await GetOfficeSubscriptionHealthAsync(customerId);
                 }
 
-                return this.View(healthModel.ViewModel, healthModel);
+                return View(healthModel.ViewModel, healthModel);
             }
             finally
             {
@@ -98,18 +99,25 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// </exception>
         private async Task<List<IHealthEvent>> GetAzureSubscriptionHealthAsync(string customerId, string subscriptionId)
         {
-            AuthenticationToken token;
+            AuthenticationResult token;
 
             customerId.AssertNotEmpty(nameof(customerId));
             subscriptionId.AssertNotEmpty(nameof(subscriptionId));
 
             try
             {
-                token = await this.Service.TokenManagement.GetAppPlusUserTokenAsync(
-                    $"{this.Service.Configuration.ActiveDirectoryEndpoint}/{customerId}",
-                    this.Service.Configuration.AzureResourceManagerEndpoint);
+                token = await Service.AccessToken.GetAccessTokenAsync(
+                    $"{Service.Configuration.ActiveDirectoryEndpoint}/{customerId}",
+                      Service.Configuration.AzureResourceManagerEndpoint,
+                    new ApplicationCredential
+                    {
+                        ApplicationId = Service.Configuration.ApplicationId,
+                        ApplicationSecret = Service.Configuration.ApplicationSecret,
+                        UseCache = true
+                    },
+                    Service.AccessToken.UserAssertionToken);
 
-                using (Insights insights = new Insights(subscriptionId, token.Token))
+                using (Insights insights = new Insights(subscriptionId, token.AccessToken))
                 {
                     return await insights.GetHealthEventsAsync();
                 }
@@ -127,18 +135,24 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// <returns>A list of health events.</returns>
         private async Task<List<IHealthEvent>> GetOfficeSubscriptionHealthAsync(string customerId)
         {
-            AuthenticationToken token;
+            AuthenticationResult token;
             ServiceCommunications comm;
 
             customerId.AssertNotEmpty(nameof(customerId));
 
             try
             {
-                token = await this.Service.TokenManagement.GetAppOnlyTokenAsync(
-                    $"{this.Service.Configuration.ActiveDirectoryEndpoint}/{customerId}",
-                    this.Service.Configuration.OfficeManagementEndpoint);
+                token = await Service.AccessToken.GetAccessTokenAsync(
+                    $"{Service.Configuration.ActiveDirectoryEndpoint}/{customerId}",
+                      Service.Configuration.OfficeManagementEndpoint,
+                    new ApplicationCredential
+                    {
+                        ApplicationId = Service.Configuration.ApplicationId,
+                        ApplicationSecret = Service.Configuration.ApplicationSecret,
+                        UseCache = true
+                    });
 
-                comm = new ServiceCommunications(this.Service, token);
+                comm = new ServiceCommunications(Service, token);
                 return await comm.GetCurrentStatusAsync(customerId);
             }
             finally

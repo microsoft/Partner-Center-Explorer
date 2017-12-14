@@ -11,8 +11,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer
 {
     using System.Linq;
     using System.Web.Mvc;
-    using Practices.Unity;
-    using Practices.Unity.Mvc;
+    using Unity;
+    using Unity.AspNet.Mvc;
 
     /// <summary>
     /// Provides the bootstrapping for integrating Unity with ASP.NET MVC.
@@ -22,7 +22,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
         /// <summary>
         /// Integrates Unity when the application starts.
         /// </summary>
-        public static void Start() 
+        public static void Start()
         {
             IUnityContainer container = UnityConfig.GetConfiguredContainer();
 

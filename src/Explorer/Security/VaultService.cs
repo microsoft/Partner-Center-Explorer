@@ -8,44 +8,42 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
 {
     using System;
     using System.Collections.Generic;
+    using System.Security;
     using System.Threading.Tasks;
     using Azure.KeyVault;
     using Azure.KeyVault.Models;
+    using Azure.Services.AppAuthentication;
     using Logic;
 
     /// <summary>
-    /// Provides a secure mechanism for retrieving and store information.
+    /// Provides a secure mechanism for retrieving and store information. 
     /// </summary>
-    /// <seealso cref="IVaultService" />
-    public sealed class VaultService : IVaultService
+    internal sealed class VaultService : IVaultService
     {
+        /// <summary>
+        /// Provides access to the application core services.
+        /// </summary>
+        private readonly IExplorerService service;
+
         /// <summary>
         /// Error code returned when a secret is not found in the vault.
         /// </summary>
         private const string NotFoundErrorCode = "SecretNotFound";
 
         /// <summary>
-        /// Provides access to core services.
-        /// </summary>
-        private readonly IExplorerService service;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="VaultService"/> class.
         /// </summary>
-        /// <param name="service">Provides access to core services.</param>
+        /// <param name="provider">Provides access to the application core services.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="provider"/> is null.
+        /// </exception>
         public VaultService(IExplorerService service)
         {
             service.AssertNotNull(nameof(service));
-
             this.service = service;
         }
 
         /// <summary>
-        /// Gets a value indicating the vault service is enabled.
-        /// </summary>
-        public bool IsEnabled => !string.IsNullOrEmpty(this.service.Configuration.VaultBaseAddress);
-
-        /// <summary>
         /// Gets the specified entity from the vault. 
         /// </summary>
         /// <param name="identifier">Identifier of the entity to be retrieved.</param>
@@ -53,24 +51,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
         /// <exception cref="ArgumentException">
         /// <paramref name="identifier"/> is empty or null.
         /// </exception>
-        public string Get(string identifier)
+        public async Task<SecureString> GetAsync(string identifier)
         {
-            identifier.AssertNotEmpty(nameof(identifier));
-
-            return SynchronousExecute(() => this.GetAsync(identifier));
-        }
-
-        /// <summary>
-        /// Gets the specified entity from the vault. 
-        /// </summary>
-        /// <param name="identifier">Identifier of the entity to be retrieved.</param>
-        /// <returns>The value retrieved from the vault.</returns>
-        /// <exception cref="ArgumentException">
-        /// <paramref name="identifier"/> is empty or null.
-        /// </exception>
-        public async Task<string> GetAsync(string identifier)
-        {
-            DateTime startTime;
+            DateTime executionTime;
             Dictionary<string, double> eventMetrics;
             Dictionary<string, string> eventProperties;
             SecretBundle bundle;
@@ -79,18 +62,13 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
 
             try
             {
-                startTime = DateTime.Now;
+                executionTime = DateTime.Now;
 
-                if (!this.IsEnabled)
-                {
-                    return null;
-                }
-
-                using (IKeyVaultClient client = new KeyVaultClient(this.service.TokenManagement.GetAppOnlyTokenAsync))
+                using (IKeyVaultClient client = GetAzureKeyVaultClient())
                 {
                     try
                     {
-                        bundle = await client.GetSecretAsync(this.service.Configuration.VaultBaseAddress, identifier);
+                        bundle = await client.GetSecretAsync(service.Configuration.KeyVaultEndpoint, identifier);
                     }
                     catch (KeyVaultErrorException ex)
                     {
@@ -108,7 +86,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
                 // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
                 {
-                    { "ElapsedMilliseconds", DateTime.Now.Subtract(startTime).TotalMilliseconds }
+                    { "ElapsedMilliseconds", DateTime.Now.Subtract(executionTime).TotalMilliseconds }
                 };
 
                 // Capture the request for the customer summary for analysis.
@@ -117,9 +95,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
                     { "Identifier", identifier }
                 };
 
-                this.service.Telemetry.TrackEvent("Vault/GetAsync", eventProperties, eventMetrics);
+                service.Telemetry.TrackEvent("KeyVault/GetAsync", eventProperties, eventMetrics);
 
-                return bundle?.Value;
+                return bundle?.Value.ToSecureString();
             }
             finally
             {
@@ -133,59 +111,37 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
         /// Stores the specified value in the vault.
         /// </summary>
         /// <param name="identifier">Identifier of the entity to be stored.</param>
-        /// <param name="value">The value to stored.</param>
-        /// <exception cref="ArgumentException">
-        /// <paramref name="identifier"/> is empty or null.
-        /// or 
-        /// <paramref name="value"/> is empty or null.
-        /// </exception>
-        public void Store(string identifier, string value)
-        {
-            identifier.AssertNotEmpty(nameof(identifier));
-            value.AssertNotEmpty(nameof(value));
-
-            this.StoreAsync(identifier, value).RunSynchronously();
-        }
-
-        /// <summary>
-        /// Stores the specified value in the vault.
-        /// </summary>
-        /// <param name="identifier">Identifier of the entity to be stored.</param>
-        /// <param name="value">The value to stored.</param>
+        /// <param name="value">The value to be stored.</param>
         /// <returns>An instance of <see cref="Task"/> that represents the asynchronous operation.</returns>
         /// <exception cref="ArgumentException">
         /// <paramref name="identifier"/> is empty or null.
-        /// or 
-        /// <paramref name="value"/> is empty or null.
         /// </exception>
-        public async Task StoreAsync(string identifier, string value)
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="value"/> is null.
+        /// </exception>
+        public async Task StoreAsync(string identifier, SecureString value)
         {
-            DateTime startTime;
+            DateTime executionTime;
             Dictionary<string, double> eventMetrics;
             Dictionary<string, string> eventProperties;
 
             identifier.AssertNotEmpty(nameof(identifier));
-            value.AssertNotEmpty(nameof(value));
+            value.AssertNotNull(nameof(value));
 
             try
             {
-                startTime = DateTime.Now;
+                executionTime = DateTime.Now;
 
-                if (!this.IsEnabled)
-                {
-                    return;
-                }
-
-                using (IKeyVaultClient client = new KeyVaultClient(this.service.TokenManagement.GetAppOnlyTokenAsync))
+                using (IKeyVaultClient client = GetAzureKeyVaultClient())
                 {
                     await client.SetSecretAsync(
-                        this.service.Configuration.VaultBaseAddress, identifier, value);
+                        service.Configuration.KeyVaultEndpoint, identifier, value.ToUnsecureString());
                 }
 
                 // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
                 {
-                    { "ElapsedMilliseconds", DateTime.Now.Subtract(startTime).TotalMilliseconds }
+                    { "ElapsedMilliseconds", DateTime.Now.Subtract(executionTime).TotalMilliseconds }
                 };
 
                 // Capture the request for the customer summary for analysis.
@@ -194,7 +150,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
                     { "Identifier", identifier }
                 };
 
-                this.service.Telemetry.TrackEvent("Vault/StoreAsync", eventProperties, eventMetrics);
+                service.Telemetry.TrackEvent("KeyVault/StoreAsync", eventProperties, eventMetrics);
             }
             finally
             {
@@ -204,26 +160,12 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
         }
 
         /// <summary>
-        /// Executes an asynchronous method synchronously
+        /// Gets an aptly configured instance of the <see cref="KeyVaultClient"/> class.
         /// </summary>
-        /// <typeparam name="T">The type to be returned.</typeparam>
-        /// <param name="operation">The asynchronous operation to be executed.</param>
-        /// <returns>The result from the operation.</returns>
-        private static T SynchronousExecute<T>(Func<Task<T>> operation)
+        /// <returns>An aptly populated instane of the <see cref="KeyVaultClient"/> class.</returns>
+        private static KeyVaultClient GetAzureKeyVaultClient()
         {
-            try
-            {
-                return Task.Run(async () => await operation()).Result;
-            }
-            catch (AggregateException ex)
-            {
-                if (ex.InnerException != null)
-                {
-                    throw ex.InnerException;
-                }
-
-                throw;
-            }
+            return new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(new AzureServiceTokenProvider().KeyVaultTokenCallback));
         }
     }
 }

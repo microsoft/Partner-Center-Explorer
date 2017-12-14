@@ -40,12 +40,12 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         {
             if (string.IsNullOrEmpty(primaryDomain))
             {
-                return this.Json(false, JsonRequestBehavior.AllowGet);
+                return Json(false, JsonRequestBehavior.AllowGet);
             }
 
-            bool exists = await this.Service.PartnerCenter.Domains.ByDomain($"{primaryDomain}.onmicrosoft.com").ExistsAsync();
+            bool exists = await Service.PartnerOperations.CheckDomainAsync($"{primaryDomain}.onmicrosoft.com");
 
-            return this.Json(!exists, JsonRequestBehavior.AllowGet);
+            return Json(!exists, JsonRequestBehavior.AllowGet);
         }
 
         /// <summary>
@@ -65,10 +65,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                client = new GraphClient(this.Service, customerId);
+                client = new GraphClient(Service, customerId);
                 domains = await client.GetDomainsAsync();
 
-                return this.Json(domains, JsonRequestBehavior.AllowGet);
+                return Json(domains, JsonRequestBehavior.AllowGet);
             }
             finally
             {
