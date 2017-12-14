@@ -12,6 +12,9 @@ log an issue using the [issue tracker](https://github.com/Microsoft/Partner-Cent
  
 ## Deployment
 Please see the [deployment guide](docs/Deployment.md) for details on how to deploy this project.
+
+[![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMicrosoft%2FPartner-Center-Explorer%2Fmaster%2Fazuredeploy.json)
+[![Visualize](http://armviz.io/visualizebutton.png)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FMicrosoft%2FPartner-Center-Explorer%2Fmaster%2Fazuredeploy.json)
  
 ## Screenshots
 The following are various screenshots that should help provide a better

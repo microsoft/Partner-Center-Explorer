@@ -1,0 +1,301 @@
+﻿{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appInsightsLocation": {
+      "type": "string",
+      "defaultValue": "South Central US",
+      "allowedValues": [
+        "South Central US",
+        "West Europe",
+        "East US",
+        "North Europe"
+      ],
+      "metadata": {
+        "description": "Location for the instance of App Insights."
+      }
+    },
+    "applicationId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "applicationSecret": {
+      "type": "string",
+      "minLength": 1
+    },
+    "applicationTenantId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "branch": {
+      "type": "string",
+      "defaultValue": "master"
+    },
+    "cacheSKUName": {
+      "type": "string",
+      "allowedValues": [
+        "Basic",
+        "Standard"
+      ],
+      "defaultValue": "Basic",
+      "metadata": {
+        "description": "The pricing tier of the new Azure Redis Cache."
+      }
+    },
+    "cacheSKUFamily": {
+      "type": "string",
+      "allowedValues": [
+        "C"
+      ],
+      "defaultValue": "C",
+      "metadata": {
+        "description": "The family for the SKU."
+      }
+    },
+    "cacheSKUCapacity": {
+      "type": "int",
+      "allowedValues": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "defaultValue": 0,
+      "metadata": {
+        "description": "The size of the new Azure Redis Cache instance."
+      }
+    },
+    "partnerCenterApplicationId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "partnerCenterApplicationSecret": {
+      "type": "string",
+      "minLength": 1
+    },
+    "partnerCenterApplicationTenantId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "repoUrl": {
+      "type": "string",
+      "defaultValue": "https://github.com/Microsoft/Partner-Center-Explorer"
+    },
+    "webSiteName": {
+      "type": "string",
+      "maxLength": 15,
+      "metadata": {
+        "description": "Name of the web application."
+      }
+    },
+    "skuName": {
+      "type": "string",
+      "defaultValue": "F1",
+      "allowedValues": [
+        "F1",
+        "D1",
+        "B1",
+        "B2",
+        "B3",
+        "S1",
+        "S2",
+        "S3",
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "metadata": {
+        "description": "Describes plan's pricing tier and instance size. Check details at https://azure.microsoft.com/en-us/pricing/details/app-service/"
+      }
+    },
+    "keyVaultName": {
+      "type": "string",
+      "metadata": {
+        "description": "Key Vault to be created. The web app will be granted access to this instance of Key Vault."
+      }
+    }
+  },
+  "variables": {
+    "cacheName": "[concat('cache', uniqueString(resourceGroup().id))]",
+    "hostingPlanName": "[concat('hostingplan', uniqueString(resourceGroup().id))]",
+    "identityResourceId": "[concat(resourceId('Microsoft.Web/sites', parameters('webSiteName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2014-04-01",
+      "name": "[parameters('webSiteName')]",
+      "type": "Microsoft.Insights/components",
+      "location": "[parameters('appInsightsLocation')]",
+      "tags": {
+        "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', parameters('webSiteName'))]": "Resource",
+        "displayName": "AppInsightsComponent"
+      },
+      "properties": {
+        "applicationId": "[parameters('webSiteName')]"
+      }
+    },
+    {
+      "name": "[variables('cacheName')]",
+      "type": "Microsoft.Cache/Redis",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-04-01",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "cache"
+      },
+      "properties": {
+        "sku": {
+          "name": "[parameters('cacheSKUName')]",
+          "family": "[parameters('cacheSKUFamily')]",
+          "capacity": "[parameters('cacheSKUCapacity')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2015-08-01",
+      "name": "[variables('hostingPlanName')]",
+      "type": "Microsoft.Web/serverfarms",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "HostingPlan"
+      },
+      "sku": {
+        "name": "[parameters('skuName')]",
+        "capacity": 1
+      },
+      "properties": {
+        "name": "[variables('hostingPlanName')]"
+      }
+    },
+    {
+      "apiVersion": "2015-08-01",
+      "name": "[parameters('webSiteName')]",
+      "type": "Microsoft.Web/sites",
+      "location": "[resourceGroup().location]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "dependsOn": [
+        "[variables('hostingPlanName')]"
+      ],
+      "tags": {
+        "[concat('hidden-related:', resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName')))]": "empty",
+        "displayName": "Website"
+      },
+      "properties": {
+        "name": "[parameters('webSiteName')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]"
+      },
+      "resources": [
+        {
+          "name": "web",
+          "type": "sourcecontrols",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2015-08-01",
+          "dependsOn": [
+            "[concat('Microsoft.Web/sites/', parameters('webSiteName'))]",
+            "[concat('Microsoft.Web/Sites/', parameters('webSiteName'), '/config/appsettings')]"
+          ],
+          "tags": {
+            "displayName": ""
+          },
+          "properties": {
+            "RepoUrl": "[parameters('repoUrl')]",
+            "branch": "[parameters('branch')]",
+            "IsManualIntegration": true
+          }
+        },
+        {
+          "name": "appsettings",
+          "type": "config",
+          "apiVersion": "2015-08-01",
+          "dependsOn": [
+            "[concat('Microsoft.Web/sites/', parameters('webSiteName'))]",
+            "[concat('Microsoft.Insights/components/', parameters('webSiteName'))]"
+          ],
+          "tags": {
+            "displayName": "ApplicationSettings"
+          },
+          "properties": {
+            "ApplicationId": "[parameters('applicationId')]",
+            "ApplicationTenantId": "[parameters('applicationTenantId')]",
+            "KeyVaultEndpoint": "[concat('https://', parameters('keyVaultName'), '.vault.azure.net')]",
+            "InstrumentationKey": "[reference(concat('Microsoft.Insights/components/', parameters('webSiteName'))).InstrumentationKey]",
+            "PartnerCenterApplicationId": "[parameters('partnerCenterApplicationId')]",
+            "PartnerCenterApplicationTenantId": "[parameters('partnerCenterApplicationTenantId')]"
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "name": "[parameters('keyVaultName')]",
+      "apiVersion": "2015-06-01",
+      "location": "[resourceGroup().location]",
+      "tags": {},
+      "properties": {
+        "sku": {
+          "family": "A",
+          "name": "premium"
+        },
+        "tenantId": "[reference(variables('identityResourceId'), '2015-08-31-PREVIEW').tenantId]",
+        "accessPolicies": [
+          {
+            "tenantId": "[reference(variables('identityResourceId'), '2015-08-31-PREVIEW').tenantId]",
+            "objectId": "[reference(variables('identityResourceId'), '2015-08-31-PREVIEW').principalId]",
+            "permissions": {
+              "secrets": [
+                "get"
+              ]
+            }
+          }
+        ],
+        "enabledForDeployment": false
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Web/sites/', parameters('webSiteName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "name": "[concat(parameters('keyVaultName'), '/', 'ApplicationSecret')]",
+      "apiVersion": "2015-06-01",
+      "properties": {
+        "contentType": "text/plain",
+        "value": "[parameters('applicationSecret')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "name": "[concat(parameters('keyVaultName'), '/', 'PartnerCenterApplicationSecret')]",
+      "apiVersion": "2015-06-01",
+      "properties": {
+        "contentType": "text/plain",
+        "value": "[parameters('partnerCenterApplicationSecret')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "name": "[concat(parameters('keyVaultName'), '/', 'RedisConnectionString')]",
+      "apiVersion": "2015-06-01",
+      "properties": {
+        "contentType": "text/plain",
+        "value": "[concat(variables('cacheName'),'.redis.cache.windows.net,abortConnect=false,ssl=true,password=', listKeys(resourceId('Microsoft.Cache/Redis', variables('cacheName')), '2015-08-01').primaryKey)]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Cache/Redis/', variables('cacheName'))]",
+        "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"
+      ]
+    }
+  ]
+}

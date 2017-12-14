@@ -1,0 +1,49 @@
+{
+  "appInsightsLocation": {
+    "value": "South Central US"
+  },
+  "applicationId": {
+    "value": ""
+  },
+  "applicationSecret": {
+    "value": ""
+
+  },
+  "applicationTenantId": {
+    "value": ""
+
+  },
+  "branch": {
+    "value": "master"
+  },
+  "cacheSKUName": {
+    "value": "basic"
+  },
+  "cacheSKUFamily": {
+    "value": "C"
+  },
+  "cacheSKUCapacity": {
+    "value": 0
+  },
+  "partnerCenterApplicationId": {
+    "value": ""
+  },
+  "partnerCenterApplicationSecret": {
+    "value": ""
+  },
+  "partnerCenterApplicationTenantId": {
+    "value": ""
+  },
+  "repoUrl": {
+    "value": "https://github.com/Microsoft/Partner-Center-Explorer"
+  },
+  "webSiteName": {
+    "value": ""
+  },
+  "skuName": {
+    "value": "F1"
+  },
+  "keyVaultName": {
+    "value": ""
+  }
+}
