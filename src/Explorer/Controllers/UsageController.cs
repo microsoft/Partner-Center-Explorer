@@ -50,8 +50,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                customer = await this.Service.PartnerOperations.GetCustomerAsync(customerId);
-                subscription = await this.Service.PartnerOperations.GetSubscriptionAsync(customerId, subscriptionId);
+                customer = await Service.PartnerOperations.GetCustomerAsync(customerId).ConfigureAwait(false);
+                subscription = await Service.PartnerOperations.GetSubscriptionAsync(customerId, subscriptionId).ConfigureAwait(false);
 
                 UsageModel usageModel = new UsageModel()
                 {
@@ -59,11 +59,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                     CustomerId = customerId,
                     SubscriptionId = subscriptionId,
                     SubscriptionFriendlyName = subscription.FriendlyName,
-                    Usage = await this.Service.PartnerOperations
-                        .GetSubscriptionUsageAsync(customerId, subscriptionId, DateTime.Now.AddMonths(-1), DateTime.Now)
+                    Usage = await Service.PartnerOperations
+                        .GetSubscriptionUsageAsync(customerId, subscriptionId, DateTime.Now.AddMonths(-1), DateTime.Now).ConfigureAwait(false)
                 };
 
-                return this.View(usageModel);
+                return View(usageModel);
             }
             finally
             {

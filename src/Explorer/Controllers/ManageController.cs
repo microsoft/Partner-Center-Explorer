@@ -60,8 +60,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                deployments = await this.GetDeploymentsAsync(customerId, resourceGroupName, subscriptionId);
-                return this.PartialView("Deployments", deployments);
+                deployments = await GetDeploymentsAsync(customerId, resourceGroupName, subscriptionId).ConfigureAwait(false);
+                return PartialView("Deployments", deployments);
             }
             finally
             {
@@ -91,8 +91,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                customer = await Service.PartnerOperations.GetCustomerAsync(customerId);
-                subscription = await Service.PartnerOperations.GetSubscriptionAsync(customerId, subscriptionId);
+                customer = await Service.PartnerOperations.GetCustomerAsync(customerId).ConfigureAwait(false);
+                subscription = await Service.PartnerOperations.GetSubscriptionAsync(customerId, subscriptionId).ConfigureAwait(false);
 
                 manageModel = new SubscriptionManageModel
                 {
@@ -164,7 +164,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
             try
             {
                 token = await GetAccessTokenAsync(
-                    $"{Service.Configuration.ActiveDirectoryEndpoint}/{model.CustomerId}");
+                    $"{Service.Configuration.ActiveDirectoryEndpoint}/{model.CustomerId}").ConfigureAwait(false);
 
                 using (ResourceManager manager = new ResourceManager(Service, token.AccessToken))
                 {
@@ -174,7 +174,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                         model.TemplateUri,
                         model.ParametersUri);
 
-                    results = await GetDeploymentsAsync(model.CustomerId, model.ResourceGroupName, model.SubscriptionId);
+                    results = await GetDeploymentsAsync(
+                        model.CustomerId,
+                        model.ResourceGroupName,
+                        model.SubscriptionId).ConfigureAwait(false);
+
                     return PartialView("Deployments", results);
                 }
             }
@@ -208,7 +212,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
             try
             {
                 token = await GetAccessTokenAsync(
-                    $"{Service.Configuration.ActiveDirectoryEndpoint}/{customerId}");
+                    $"{Service.Configuration.ActiveDirectoryEndpoint}/{customerId}").ConfigureAwait(false);
 
                 using (ResourceManager manager = new ResourceManager(Service, token.AccessToken))
                 {
@@ -242,7 +246,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
             try
             {
                 token = await GetAccessTokenAsync(
-                  $"{Service.Configuration.ActiveDirectoryEndpoint}/{customerId}");
+                  $"{Service.Configuration.ActiveDirectoryEndpoint}/{customerId}").ConfigureAwait(false);
 
                 using (ResourceManager manager = new ResourceManager(Service, token.AccessToken))
                 {
@@ -275,7 +279,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                     ApplicationSecret = Service.Configuration.ApplicationSecret,
                     UseCache = true
                 },
-                Service.AccessToken.UserAssertionToken);
+                Service.AccessToken.UserAssertionToken).ConfigureAwait(false);
         }
     }
 }

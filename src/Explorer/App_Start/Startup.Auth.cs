@@ -31,7 +31,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
         /// <param name="app">The application to be configured.</param>
         public void ConfigureAuth(IAppBuilder app)
         {
-            IExplorerService service = MvcApplication.UnityContainer.Resolve<IExplorerService>();
+            IExplorerService service = UnityConfig.Container.Resolve<IExplorerService>();
 
             app.SetDefaultSignInAsAuthenticationType(CookieAuthenticationDefaults.AuthenticationType);
 
@@ -65,7 +65,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
 
                             IGraphClient client = new GraphClient(service, userTenantId);
 
-                            List<RoleModel> roles = await client.GetDirectoryRolesAsync(signedInUserObjectId);
+                            List<RoleModel> roles = await client.GetDirectoryRolesAsync(signedInUserObjectId).ConfigureAwait(false);
 
                             foreach (RoleModel role in roles)
                             {
@@ -81,7 +81,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
                             {
                                 try
                                 {
-                                    Customer c = await service.PartnerOperations.GetCustomerAsync(userTenantId);
+                                    Customer c = await service.PartnerOperations.GetCustomerAsync(userTenantId).ConfigureAwait(false);
                                     customerId = c.Id;
                                 }
                                 catch (PartnerException ex)

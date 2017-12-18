@@ -7,11 +7,13 @@
 namespace Microsoft.Store.PartnerCenter.Explorer.Cache
 {
     using System;
-    using System.Net;
+    using System.IO;
+    using System.IO.Compression;
+    using System.Security;
+    using System.Text;
     using System.Threading.Tasks;
     using Logic;
     using Newtonsoft.Json;
-    using Security;
     using StackExchange.Redis;
 
     /// <summary>
@@ -20,14 +22,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
     public class CacheService : ICacheService
     {
         /// <summary>
-        /// Provides the ability to protect data.
-        /// </summary>
-        private readonly IDataProtector protector;
-
-        /// <summary>
         /// Provides access to core services.
         /// </summary>
-        private readonly IExplorerService service;
+        private IExplorerService service;
 
         /// <summary>
         /// Provides the ability to interact with an instance of Redis Cache.
@@ -35,7 +32,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         private IConnectionMultiplexer connection;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CacheService"/> class.
+        /// Initializes a new instance of the <see cref="RedisCacheProvider"/> class.
         /// </summary>
         /// <param name="service">Provides access to core services.</param>
         /// <exception cref="ArgumentNullException">
@@ -44,32 +41,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         public CacheService(IExplorerService service)
         {
             service.AssertNotNull(nameof(service));
-
-            this.protector = new MachineKeyDataProtector(new[] { typeof(CacheService).FullName });
-            this.service = service;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CacheService"/> class.
-        /// </summary>
-        /// <param name="service">Provides access to core services.c</param>
-        /// <param name="connection">Connection to utilized to communicate with the Redis Cache instance.</param>
-        /// <param name="dataProtector">Provides protection for data being cached.</param>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="service"/> is null.
-        /// or
-        /// <paramref name="connection"/> is null.
-        /// or
-        /// <paramref name="dataProtector"/> is null.
-        /// </exception>
-        public CacheService(IExplorerService service, IConnectionMultiplexer connection, IDataProtector dataProtector)
-        {
-            service.AssertNotNull(nameof(service));
-            connection.AssertNotNull(nameof(connection));
-            dataProtector.AssertNotNull(nameof(dataProtector));
-
-            this.connection = connection;
-            this.protector = dataProtector;
             this.service = service;
         }
 
@@ -80,30 +51,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
         public async Task ClearAsync(CacheDatabaseType database)
         {
-            EndPoint[] endpoints;
-            IServer server;
-
-            try
-            {
-                if (this.connection == null)
-                {
-                    this.connection = await ConnectionMultiplexer.ConnectAsync(
-                        this.service.Configuration.RedisCacheConnectionString.ToUnsecureString());
-                }
-
-                endpoints = this.connection.GetEndPoints(true);
-
-                foreach (EndPoint ep in endpoints)
-                {
-                    server = this.connection.GetServer(ep);
-                    await server.FlushDatabaseAsync((int)database);
-                }
-            }
-            finally
-            {
-                endpoints = null;
-                server = null;
-            }
+            await Task.FromResult(0);
         }
 
         /// <summary>
@@ -111,17 +59,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         /// </summary>
         /// <param name="database">Cache database type where the data is stored.</param>
         /// <param name="key">The key of the entity to be deleted.</param>
-        /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
+        /// <returns>An instance of <see cref="Task"/> that represents the asynchronous operation.</returns>
         /// <exception cref="ArgumentException">
         /// <paramref name="key"/> is empty or null.
         /// </exception>
         public async Task DeleteAsync(CacheDatabaseType database, string key = null)
         {
-            key.AssertNotEmpty(nameof(key));
-
-            IDatabase cache = this.GetCacheReference(database);
-
-            await cache.KeyDeleteAsync(key);
+            IDatabase cache = await GetCacheReferenceAsync(database);
+            await cache.KeyDeleteAsync(key).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -140,11 +85,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         {
             key.AssertNotEmpty(nameof(key));
 
-            IDatabase cache = this.GetCacheReference(database);
+            IDatabase cache = GetCacheReference(database);
             RedisValue value = cache.StringGet(key);
 
-            return value.HasValue ?
-                JsonConvert.DeserializeObject<TEntity>(this.protector.Unprotect(value)) : null;
+            return value.HasValue ? DecompressEntity<TEntity>(value) : null;
         }
 
         /// <summary>
@@ -163,10 +107,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         {
             key.AssertNotEmpty(nameof(key));
 
-            IDatabase cache = this.GetCacheReference(database);
-            RedisValue value = await cache.StringGetAsync(key);
+            IDatabase cache = await GetCacheReferenceAsync(database).ConfigureAwait(false);
+            RedisValue value = await cache.StringGetAsync(key).ConfigureAwait(false);
 
-            return value.HasValue ? JsonConvert.DeserializeObject<TEntity>(this.protector.Unprotect(value)) : null;
+            return value.HasValue ? DecompressEntity<TEntity>(value) : null;
         }
 
         /// <summary>
@@ -190,9 +134,12 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
             key.AssertNotEmpty(nameof(key));
             entity.AssertNotNull(nameof(entity));
 
-            IDatabase cache = await this.GetCacheReferenceAsync(database);
+            IDatabase cache = await GetCacheReferenceAsync(database).ConfigureAwait(false);
+
             await cache.StringSetAsync(
-                key, this.protector.Protect(JsonConvert.SerializeObject(entity)), expiration);
+                key, 
+                CompressEntity(entity), 
+                expiration).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -201,30 +148,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         /// <param name="database">Cache database type where the data is stored.</param>
         public void Clear(CacheDatabaseType database)
         {
-            EndPoint[] endpoints;
-            IServer server;
-
-            try
-            {
-                if (this.connection == null)
-                {
-                    this.connection = ConnectionMultiplexer.Connect(
-                        this.service.Configuration.RedisCacheConnectionString.ToUnsecureString());
-                }
-
-                endpoints = this.connection.GetEndPoints(true);
-
-                foreach (EndPoint ep in endpoints)
-                {
-                    server = this.connection.GetServer(ep);
-                    server.FlushDatabase((int)database);
-                }
-            }
-            finally
-            {
-                endpoints = null;
-                server = null;
-            }
         }
 
         /// <summary>
@@ -235,11 +158,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         /// <exception cref="ArgumentException">
         /// <paramref name="key"/> is empty or null.
         /// </exception>
-        public void Delete(CacheDatabaseType database, string key)
+        public void Delete(CacheDatabaseType database, string key = null)
         {
-            key.AssertNotEmpty(nameof(key));
-
-            IDatabase cache = this.GetCacheReference(database);
+            IDatabase cache = GetCacheReference(database);
             cache.KeyDelete(key);
         }
 
@@ -247,7 +168,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         /// Stores the specified entity in the cache.
         /// </summary>
         /// <typeparam name="TEntity">The type of the entity in cache.</typeparam>
-        /// <param name="cacheDatabase">Cache database type where the data should be stored.</param>
+        /// <param name="database">Cache database type where the data should be stored.</param>
         /// <param name="key">A unique identifier for the cache entry.</param>
         /// <param name="entity">The object to be cached.</param>
         /// <param name="expiration">When the entity in the cache should expire.</param>
@@ -257,15 +178,89 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         /// <exception cref="ArgumentNullException"> 
         /// entity
         /// </exception>
-        public void Store<TEntity>(CacheDatabaseType cacheDatabase, string key, TEntity entity, TimeSpan? expiration = null)
+        public void Store<TEntity>(CacheDatabaseType database, string key, TEntity entity, TimeSpan? expiration = null)
             where TEntity : class
         {
             key.AssertNotEmpty(nameof(key));
             entity.AssertNotNull(nameof(entity));
 
-            IDatabase cache = this.GetCacheReference(cacheDatabase);
+            IDatabase cache = GetCacheReference(database);
+
             cache.StringSet(
-                key, this.protector.Protect(JsonConvert.SerializeObject(entity)), expiration);
+                key, CompressEntity(entity), expiration);
+        }
+
+        /// <summary>
+        /// Compresses the specified entity.
+        /// </summary>
+        /// <typeparam name="TEntity">The type of the entity to be compressed.</typeparam>
+        /// <param name="entity">The entity to be compressed.</param>
+        /// <returns>A base 64 string that represents the compressed entity.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="entity"/> is null.
+        /// </exception>
+        private static string CompressEntity<TEntity>(TEntity entity)
+        {
+            MemoryStream memoryStream;
+            byte[] buffer;
+
+            entity.AssertNotNull(nameof(entity));
+
+            try
+            {
+                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(entity));
+
+                memoryStream = new MemoryStream();
+
+                using (GZipStream stream = new GZipStream(memoryStream, CompressionMode.Compress))
+                {
+                    stream.Write(buffer, 0, buffer.Length);
+                }
+
+                return Convert.ToBase64String(memoryStream.ToArray());
+            }
+            finally
+            {
+                buffer = null;
+            }
+        }
+
+        /// <summary>
+        /// Decompresses the entity represented by the specified value.
+        /// </summary>
+        /// <typeparam name="TEntity">The type of the entity to be decompressed.</typeparam>
+        /// <param name="value">A base 64 string that represented the compressed entity.</param>
+        /// <returns>The decompressed and deserialized instance of the entity.</returns>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="value"/> is empty or null.
+        /// </exception>
+        public static TEntity DecompressEntity<TEntity>(string value)
+        {
+            MemoryStream memoryStream;
+            byte[] buffer;
+
+            value.AssertNotEmpty(nameof(value));
+
+            try
+            {
+                buffer = Convert.FromBase64String(value);
+
+                memoryStream = new MemoryStream(buffer, 0, buffer.Length);
+
+                using (MemoryStream decompressedStream = new MemoryStream())
+                {
+                    using (GZipStream stream = new GZipStream(memoryStream, CompressionMode.Decompress))
+                    {
+                        stream.CopyTo(decompressedStream);
+                    }
+
+                    return JsonConvert.DeserializeObject<TEntity>(Encoding.UTF8.GetString(decompressedStream.ToArray()));
+                }
+            }
+            finally
+            {
+                buffer = null;
+            }
         }
 
         /// <summary>
@@ -275,22 +270,16 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         /// <returns>A reference to the appropriate cache database.</returns>
         private IDatabase GetCacheReference(CacheDatabaseType database)
         {
-            if (this.connection != null)
+            if (connection == null)
             {
-                return this.connection.GetDatabase((int)database);
+                using (SecureString redisCacheConnectionString = SynchronousExecute(() => service.Vault.GetAsync("RedisCacheConnectionString")))
+                {
+                    connection = ConnectionMultiplexer.Connect(
+                        redisCacheConnectionString.ToUnsecureString());
+                }
             }
 
-            try
-            {
-                this.connection = ConnectionMultiplexer.Connect(
-                    this.service.Configuration.RedisCacheConnectionString.ToUnsecureString());
-
-                return this.connection.GetDatabase((int)database);
-            }
-            catch (RedisConnectionException ex)
-            {
-                throw new CacheException("Failed to connect to the instance of Redis Cache.", ex);
-            }
+            return connection.GetDatabase((int)database);
         }
 
         /// <summary>
@@ -300,21 +289,39 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         /// <returns>A reference to the appropriate cache database.</returns>
         private async Task<IDatabase> GetCacheReferenceAsync(CacheDatabaseType database)
         {
-            if (this.connection != null)
+            if (connection == null)
             {
-                return this.connection.GetDatabase((int)database);
+                using (SecureString redisCacheConnectionString = await service.Vault.GetAsync("RedisCacheConnectionString"))
+                {
+                    connection = await ConnectionMultiplexer.ConnectAsync(
+                        redisCacheConnectionString.ToUnsecureString()).ConfigureAwait(false);
+                }
             }
 
+            return connection.GetDatabase((int)database);
+        }
+
+
+        /// <summary>
+        /// Executes an asynchronous method synchronously
+        /// </summary>
+        /// <typeparam name="T">The type to be returned.</typeparam>
+        /// <param name="operation">The asynchronous operation to be executed.</param>
+        /// <returns>The result from the operation.</returns>
+        private static T SynchronousExecute<T>(Func<Task<T>> operation)
+        {
             try
             {
-                this.connection = await ConnectionMultiplexer.ConnectAsync(
-                    this.service.Configuration.RedisCacheConnectionString.ToUnsecureString());
-
-                return this.connection.GetDatabase((int)database);
+                return Task.Run(async () => await operation?.Invoke()).Result;
             }
-            catch (RedisConnectionException ex)
+            catch (AggregateException ex)
             {
-                throw new CacheException("Failed to connect to the instance of Redis Cache.", ex);
+                if (ex.InnerException != null)
+                {
+                    throw ex.InnerException;
+                }
+
+                throw;
             }
         }
     }

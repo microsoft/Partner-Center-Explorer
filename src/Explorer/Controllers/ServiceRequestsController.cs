@@ -49,7 +49,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         {
             ServiceRequestsModel serviceRequestsModel = new ServiceRequestsModel()
             {
-                ServiceRequests = await GetServiceRequestsAsync()
+                ServiceRequests = await GetServiceRequestsAsync().ConfigureAwait(false)
             };
 
             return PartialView(serviceRequestsModel);
@@ -65,7 +65,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                requests = await Service.PartnerOperations.GetServiceRequestsAsync();
+                requests = await Service.PartnerOperations.GetServiceRequestsAsync().ConfigureAwait(false);
 
                 return requests.Items.Select(r => new ServiceRequestModel()
                 {

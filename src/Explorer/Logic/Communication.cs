@@ -50,16 +50,16 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                    response = await client.GetAsync(requestUri);
+                    response = await client.GetAsync(requestUri).ConfigureAwait(false);
 
                     if (!response.IsSuccessStatusCode)
                     {
-                        string result = await response.Content.ReadAsStringAsync();
+                        string result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
                         throw new CommunicationException(result, response.StatusCode);
                     }
 
-                    return await response.Content.ReadAsAsync<T>();
+                    return await response.Content.ReadAsAsync<T>().ConfigureAwait(false);
                 }
             }
             finally

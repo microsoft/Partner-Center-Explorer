@@ -23,6 +23,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{AF9B24D9-4
 		docs\Terminolgy.md = docs\Terminolgy.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{A574A852-591E-4594-96BB-808122581462}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\Create-AzureADApplication.ps1 = scripts\Create-AzureADApplication.ps1
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

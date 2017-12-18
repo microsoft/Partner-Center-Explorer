@@ -21,11 +21,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer
     public class MvcApplication : HttpApplication
     {
         /// <summary>
-        /// Gets the unity container for the application.
-        /// </summary>
-        internal static IUnityContainer UnityContainer { get; private set; }
-
-        /// <summary>
         /// Called when the application starts.
         /// </summary>
         protected void Application_Start()
@@ -36,9 +31,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
             {
                 AreaRegistration.RegisterAllAreas();
 
-                UnityContainer = UnityConfig.GetConfiguredContainer();
-
-                service = UnityContainer.Resolve<IExplorerService>();
+                service = UnityConfig.Container.Resolve<IExplorerService>();
 
                 Task.Run(service.InitializeAsync).Wait();
 

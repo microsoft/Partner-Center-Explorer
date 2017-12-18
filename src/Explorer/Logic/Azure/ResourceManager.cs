@@ -92,7 +92,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
 
             try
             {
-                this.client.SubscriptionId = subscriptionId;
+                client.SubscriptionId = subscriptionId;
 
                 deployment = new Deployment()
                 {
@@ -110,7 +110,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
 
                 deploymentName = Guid.NewGuid().ToString();
 
-                result = await client.Deployments.CreateOrUpdateAsync(resourceGroupName, deploymentName, deployment);
+                result = await client.Deployments.CreateOrUpdateAsync(
+                    resourceGroupName,
+                    deploymentName,
+                    deployment).ConfigureAwait(false);
 
                 return result.Properties.ProvisioningState;
             }
@@ -142,7 +145,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
             try
             {
                 client.SubscriptionId = subscriptionId;
-                deployements = await client.Deployments.ListByResourceGroupAsync(resourceGroupName);
+                deployements = await client.Deployments.ListByResourceGroupAsync(resourceGroupName).ConfigureAwait(false);
 
                 return deployements.ToList();
             }
@@ -169,7 +172,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
             try
             {
                 client.SubscriptionId = subscriptionId;
-                resourceGroups = await client.ResourceGroups.ListAsync();
+                resourceGroups = await client.ResourceGroups.ListAsync().ConfigureAwait(false);
                 return resourceGroups.ToList();
             }
             finally

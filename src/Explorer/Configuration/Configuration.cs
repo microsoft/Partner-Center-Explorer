@@ -27,7 +27,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
         /// Initializes a new instance of the <see cref="Configuration"/> class.
         /// </summary>
         /// <param name="service">Provides access to core services.</param>
-        /// <exception cref="System.ArgumentNullException">
+        /// <exception cref="ArgumentNullException">
         /// <paramref name="service"/> is null.
         /// </exception>
         public Configuration(IExplorerService service)
@@ -39,12 +39,12 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
         /// <summary>
         /// Gets the Active Directory endpoint address.
         /// </summary>
-        public string ActiveDirectoryEndpoint => ConfigurationManager.AppSettings["ActiveDirectoryEndpoint"];
+        public string ActiveDirectoryEndpoint { get; private set; }
 
         /// <summary>
         /// Gets the application identifier value.
         /// </summary>
-        public string ApplicationId => ConfigurationManager.AppSettings["ApplicationId"];
+        public string ApplicationId { get; private set; }
 
         /// <summary>
         /// Gets the application secret value.
@@ -54,27 +54,27 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
         /// <summary>
         /// Gets the application tenant identifier.
         /// </summary>
-        public string ApplicationTenantId => ConfigurationManager.AppSettings["ApplicationTenantId"];
+        public string ApplicationTenantId { get; private set; }
 
         /// <summary>
         /// Gets the Azure Resource Manager endpoint address.
         /// </summary>
-        public string AzureResourceManagerEndpoint => ConfigurationManager.AppSettings["AzureResourceManagerEndpoint"];
+        public string AzureResourceManagerEndpoint { get; private set; }
 
         /// <summary>
         /// Gets the Microsoft Graph endpoint address.
         /// </summary>
-        public string GraphEndpoint => ConfigurationManager.AppSettings["GraphEndpoint"];
+        public string GraphEndpoint { get; private set; }
 
         /// <summary>
         /// Gets the Application Insights instrumentation key.
         /// </summary>
-        public string InstrumentationKey => ConfigurationManager.AppSettings["InstrumentationKey"];
+        public string InstrumentationKey { get; private set; }
 
         /// <summary>
         /// Gets the endpoint address for the instance of Key Vault.
         /// </summary>
-        public string KeyVaultEndpoint => ConfigurationManager.AppSettings["KeyVaultEndpoint"];
+        public string KeyVaultEndpoint { get; private set; }
 
         /// <summary>
         /// Gets a value indicating whether or not the reseller tenant is the TIP tenant.
@@ -84,12 +84,12 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
         /// <summary>
         /// Gets the Office 365 Management endpoint address.
         /// </summary>
-        public string OfficeManagementEndpoint => ConfigurationManager.AppSettings["OfficeManagementEndpoint"];
+        public string OfficeManagementEndpoint { get; private set; }
 
         /// <summary>
         /// Gets the Partner Center application identifier.
         /// </summary>
-        public string PartnerCenterApplicationId => ConfigurationManager.AppSettings["PartnerCenterApplicationId"];
+        public string PartnerCenterApplicationId { get; private set; }
 
         /// <summary>
         /// Gets the Partner Center application secret.
@@ -99,12 +99,12 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
         /// <summary>
         /// Gets the Partner Center application tenant identifier.
         /// </summary>
-        public string PartnerCenterApplicationTenantId => ConfigurationManager.AppSettings["PartnerCenterApplicationTenantId"];
+        public string PartnerCenterApplicationTenantId { get; private set; }
 
         /// <summary>
         /// Gets the Partner Center endpoint address.
         /// </summary>
-        public string PartnerCenterEndpoint => ConfigurationManager.AppSettings["PartnerCenterEndpoint"];
+        public string PartnerCenterEndpoint { get; private set; }
 
         /// <summary>
         /// Gets the Redis Cache connection string.
@@ -117,9 +117,22 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
         /// <returns>An instance of the  <see cref="Task"/> class that represents the asynchronous operation.</returns>
         public async Task InitializeAsync()
         {
-            ApplicationSecret = await service.Vault.GetAsync("ApplicationSecret");
-            PartnerCenterApplicationSecret = await service.Vault.GetAsync("PartnerCenterApplicationSecret");
-            RedisCacheConnectionString = await service.Vault.GetAsync("RedisCacheConnectionString");
+
+            ActiveDirectoryEndpoint = ConfigurationManager.AppSettings["ActiveDirectoryEndpoint"];
+            ApplicationId = ConfigurationManager.AppSettings["ApplicationId"];
+            ApplicationTenantId = ConfigurationManager.AppSettings["ApplicationTenantId"];
+            AzureResourceManagerEndpoint = ConfigurationManager.AppSettings["AzureResourceManagerEndpoint"];
+            GraphEndpoint = ConfigurationManager.AppSettings["GraphEndpoint"];
+            InstrumentationKey = ConfigurationManager.AppSettings["InstrumentationKey"];
+            KeyVaultEndpoint = ConfigurationManager.AppSettings["KeyVaultEndpoint"];
+            OfficeManagementEndpoint = ConfigurationManager.AppSettings["OfficeManagementEndpoint"];
+            PartnerCenterApplicationId = ConfigurationManager.AppSettings["PartnerCenterApplicationId"];
+            PartnerCenterApplicationTenantId = ConfigurationManager.AppSettings["PartnerCenterApplicationTenantId"];
+            PartnerCenterEndpoint = ConfigurationManager.AppSettings["PartnerCenterEndpoint"];
+
+            ApplicationSecret = await service.Vault.GetAsync("ApplicationSecret").ConfigureAwait(false);
+            PartnerCenterApplicationSecret = await service.Vault.GetAsync("PartnerCenterApplicationSecret").ConfigureAwait(false);
+            RedisCacheConnectionString = await service.Vault.GetAsync("RedisCacheConnectionString").ConfigureAwait(false);
         }
     }
 }

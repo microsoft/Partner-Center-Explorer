@@ -52,10 +52,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             InvoiceDetailsModel invoiceDetailsModel = new InvoiceDetailsModel()
             {
-                InvoiceLineItems = await this.GetInvoiceLineItemsAsync(invoiceId, customerName, "Azure")
+                InvoiceLineItems = await GetInvoiceLineItemsAsync(invoiceId, customerName, "Azure").ConfigureAwait(false)
             };
 
-            return this.PartialView(invoiceDetailsModel);
+            return PartialView(invoiceDetailsModel);
         }
 
         /// <summary>
@@ -66,10 +66,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         {
             InvoicesModel invoicesModel = new InvoicesModel()
             {
-                Invoices = await this.Service.PartnerOperations.GetInvoicesAsync()
+                Invoices = await Service.PartnerOperations.GetInvoicesAsync().ConfigureAwait(false)
             };
 
-            return this.View(invoicesModel);
+            return View(invoicesModel);
         }
 
         /// <summary>
@@ -85,15 +85,12 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
             List<string> customers;
             List<InvoiceLineItem> lineItems;
 
-            if (string.IsNullOrEmpty(invoiceId))
-            {
-                throw new ArgumentNullException(nameof(invoiceId));
-            }
+            invoiceId.AssertNotEmpty(nameof(invoiceId));
 
             try
             {
                 customers = new List<string>();
-                lineItems = await this.GetInvoiceLineItemsAsync(invoiceId);
+                lineItems = await GetInvoiceLineItemsAsync(invoiceId).ConfigureAwait(false);
 
                 customers.AddRange(
                     lineItems
@@ -113,7 +110,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                         .Cast<UsageBasedLineItem>()
                         .Select(x => x.CustomerCompanyName));
 
-                return this.Json(customers.Distinct(), JsonRequestBehavior.AllowGet);
+                return Json(customers.Distinct(), JsonRequestBehavior.AllowGet);
             }
             finally
             {
@@ -131,7 +128,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         {
             if (string.IsNullOrEmpty(invoiceId))
             {
-                return this.RedirectToAction("Index", "Invoices");
+                return RedirectToAction("Index", "Invoices");
             }
 
             InvoiceDetailsModel invoiceDetailsModel = new InvoiceDetailsModel()
@@ -139,7 +136,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                 InvoiceId = invoiceId,
             };
 
-            return this.View(invoiceDetailsModel);
+            return View(invoiceDetailsModel);
         }
 
         /// <summary>
@@ -168,14 +165,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
             {
                 if (providerType.Equals("Azure", StringComparison.OrdinalIgnoreCase))
                 {
-                    data = await this.GetUsageRecordsAsync(invoiceId, customerName);
+                    data = await GetUsageRecordsAsync(invoiceId, customerName).ConfigureAwait(false);
                 }
                 else
                 {
-                    data = await this.GetLicensedRecordsAsync(invoiceId, customerName);
+                    data = await GetLicensedRecordsAsync(invoiceId, customerName).ConfigureAwait(false);
                 }
 
-                return this.File(data.ToArray(), "text/csv", $"Invoice-{invoiceId}-{customerName}-{providerType}.csv");
+                return File(data.ToArray(), "text/csv", $"Invoice-{invoiceId}-{customerName}-{providerType}.csv");
             }
             finally
             {
@@ -201,10 +198,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             InvoiceDetailsModel invoiceDetailsModel = new InvoiceDetailsModel()
             {
-                InvoiceLineItems = await this.GetInvoiceLineItemsAsync(invoiceId, customerName, "Office")
+                InvoiceLineItems = await GetInvoiceLineItemsAsync(invoiceId, customerName, "Office").ConfigureAwait(false)
             };
 
-            return this.PartialView(invoiceDetailsModel);
+            return PartialView(invoiceDetailsModel);
         }
 
         /// <summary>
@@ -234,13 +231,15 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                     return lineItems;
                 }
 
-                invoice = await this.Service.PartnerOperations.GetInvoiceAsync(invoiceId);
+                invoice = await Service.PartnerOperations.GetInvoiceAsync(invoiceId).ConfigureAwait(false);
                 lineItems = new List<InvoiceLineItem>();
 
                 foreach (InvoiceDetail detail in invoice.InvoiceDetails)
                 {
-                    data = await this.Service.PartnerOperations
-                        .GetInvoiceLineItemsAsync(invoiceId, detail.BillingProvider, detail.InvoiceLineItemType);
+                    data = await Service.PartnerOperations.GetInvoiceLineItemsAsync(
+                        invoiceId, 
+                        detail.BillingProvider, 
+                        detail.InvoiceLineItemType).ConfigureAwait(false);
 
                     lineItems.AddRange(data);
                 }
@@ -281,7 +280,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
             {
                 if (providerType.Equals("Azure", StringComparison.OrdinalIgnoreCase))
                 {
-                    items = await this.GetInvoiceLineItemsAsync(invoiceId);
+                    items = await GetInvoiceLineItemsAsync(invoiceId).ConfigureAwait(false);
 
                     return items
                         .Where(x => x is UsageBasedLineItem)
@@ -291,7 +290,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                 }
                 else if (providerType.Equals("Office", StringComparison.OrdinalIgnoreCase))
                 {
-                    items = await this.GetInvoiceLineItemsAsync(invoiceId);
+                    items = await GetInvoiceLineItemsAsync(invoiceId).ConfigureAwait(false);
 
                     return items
                         .Where(x => x is LicenseBasedLineItem)
@@ -326,7 +325,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                data = await this.GetInvoiceLineItemsAsync(invoiceId, customerName, "Office");
+                data = await GetInvoiceLineItemsAsync(invoiceId, customerName, "Office").ConfigureAwait(false);
                 items = data.Cast<LicenseBasedLineItem>().ToList();
 
                 using (MemoryStream stream = new MemoryStream())
@@ -365,7 +364,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                data = await this.GetInvoiceLineItemsAsync(invoiceId, customerName, "Azure");
+                data = await GetInvoiceLineItemsAsync(invoiceId, customerName, "Azure").ConfigureAwait(false);
                 items = data.Cast<UsageBasedLineItem>().ToList();
 
                 using (MemoryStream stream = new MemoryStream())

@@ -26,9 +26,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
         /// <param name="principal">A user claims principal created by Azure Active Directory.</param>
         public CustomerPrincipal(ClaimsPrincipal principal) : base(principal)
         {
-            this.CustomerId = principal.FindFirst("CustomerId")?.Value;
-            this.Email = principal.FindFirst(ClaimTypes.Email)?.Value;
-            this.Name = principal.FindFirst(ClaimTypes.Name)?.Value;
+            CustomerId = principal.FindFirst("CustomerId")?.Value;
+            Email = principal.FindFirst(ClaimTypes.Email)?.Value;
+            Name = principal.FindFirst(ClaimTypes.Name)?.Value;
         }
 
         /// <summary>

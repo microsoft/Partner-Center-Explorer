@@ -55,7 +55,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             this.customerId = customerId;
             this.service = service;
 
-            this.client = new ActiveDirectoryClient(
+            client = new ActiveDirectoryClient(
                 new Uri($"{this.service.Configuration.GraphEndpoint}/{customerId}"),
                 async () =>
                 {
@@ -67,7 +67,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                             ApplicationId = service.Configuration.ApplicationId,
                             ApplicationSecret = service.Configuration.ApplicationSecret,
                             UseCache = true
-                        });
+                        }).ConfigureAwait(false);
 
                     return token.AccessToken;
                 });
@@ -111,7 +111,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
             try
             {
-                memberships = await this.client.Users.GetByObjectId(objectId).MemberOf.ExecuteAsync();
+                memberships = await client.Users.GetByObjectId(objectId).MemberOf.ExecuteAsync().ConfigureAwait(false);
                 roles = new List<RoleModel>();
 
                 do
@@ -141,7 +141,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                         }
                     }
 
-                    memberships = await memberships.GetNextPageAsync();
+                    memberships = await memberships.GetNextPageAsync().ConfigureAwait(false);
                 }
                 while (memberships != null);
 
@@ -165,7 +165,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
             try
             {
-                domains = await this.client.Domains.ExecuteAsync();
+                domains = await client.Domains.ExecuteAsync().ConfigureAwait(false);
                 models = new List<DomainModel>();
 
                 do
@@ -184,7 +184,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                         SupportedServices = d.SupportedServices
                     }));
 
-                    domains = await domains.GetNextPageAsync();
+                    domains = await domains.GetNextPageAsync().ConfigureAwait(false);
                 }
                 while (domains != null);
 
@@ -207,14 +207,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
             try
             {
-                users = await this.client.Users.ExecuteAsync();
+                users = await client.Users.ExecuteAsync().ConfigureAwait(false);
                 value = new List<UserModel>();
 
                 do
                 {
                     value.AddRange(users.CurrentPage.Select(u => new UserModel()
                     {
-                        CustomerId = this.customerId,
+                        CustomerId = customerId,
                         DisplayName = u.DisplayName,
                         FirstName = u.GivenName,
                         Id = u.ObjectId,
@@ -223,7 +223,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                         UserPrincipalName = u.UserPrincipalName
                     }));
 
-                    users = await users.GetNextPageAsync();
+                    users = await users.GetNextPageAsync().ConfigureAwait(false);
                 }
                 while (users != null);
 

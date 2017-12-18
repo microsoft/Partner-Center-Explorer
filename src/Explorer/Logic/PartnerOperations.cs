@@ -102,11 +102,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 executionTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await GetAppOperationsAsync(correlationId);
+                operations = await GetAppOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                exists = await operations.Domains.ByDomain(domain).ExistsAsync();
+                exists = await operations.Domains.ByDomain(domain).ExistsAsync().ConfigureAwait(false);
 
                 eventMetrics = new Dictionary<string, double>
                 {
@@ -159,16 +159,16 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 startTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await this.GetAppOperationsAsync(correlationId);
+                operations = await GetAppOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (!principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
+                if (!principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
                 {
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
 
-                newEntity = await operations.Customers.CreateAsync(customer);
+                newEntity = await operations.Customers.CreateAsync(customer).ConfigureAwait(false);
 
                 // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
@@ -220,7 +220,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 startTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await GetAppOperationsAsync(correlationId);
+                operations = await GetAppOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
@@ -230,7 +230,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                 }
                 else
                 {
-                    newEntity = await operations.Customers.ById(principal.CustomerId).Orders.CreateAsync(newOrder);
+                    newEntity = await operations.Customers.ById(principal.CustomerId).Orders.CreateAsync(newOrder).ConfigureAwait(false);
                 }
 
                 // Track the event measurements for analysis.
@@ -292,13 +292,13 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 executionTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await GetAppOperationsAsync(correlationId);
+                operations = await GetAppOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
                 {
-                    user = await operations.Customers.ById(customerId).Users.CreateAsync(newEntity);
+                    user = await operations.Customers.ById(customerId).Users.CreateAsync(newEntity).ConfigureAwait(false);
                 }
                 else
                 {
@@ -354,7 +354,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 startTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await this.GetAppOperationsAsync(correlationId);
+                operations = await GetAppOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
@@ -363,15 +363,13 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
 
-                await operations.Customers.ById(customerId).DeleteAsync();
+                await operations.Customers.ById(customerId).DeleteAsync().ConfigureAwait(false);
 
-                // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
                 {
                     { "ElapsedMilliseconds", DateTime.Now.Subtract(startTime).TotalMilliseconds }
                 };
 
-                // Capture the request for the customer summary for analysis.
                 eventProperties = new Dictionary<string, string>
                 {
                     { "CustomerId", principal.CustomerId },
@@ -420,7 +418,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 startTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await GetAppOperationsAsync(correlationId);
+                operations = await GetAppOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
@@ -429,7 +427,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
 
-                await operations.Customers.ById(customerId).Users.ById(userId).DeleteAsync();
+                await operations.Customers.ById(customerId).Users.ById(userId).DeleteAsync().ConfigureAwait(false);
 
                 // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
@@ -445,7 +443,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                this.service.Telemetry.TrackEvent("DeleteCustomerAsync", eventProperties, eventMetrics);
+                service.Telemetry.TrackEvent(nameof(DeleteUserAsync), eventProperties, eventMetrics);
             }
             finally
             {
@@ -476,14 +474,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 executionTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await GetAppOperationsAsync(correlationId);
+                operations = await GetAppOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 records = await operations.AuditRecords.QueryAsync(
                     startDate,
                     endDate,
-                    QueryFactory.Instance.BuildSimpleQuery());
+                    QueryFactory.Instance.BuildSimpleQuery()).ConfigureAwait(false);
 
                 eventMetrics = new Dictionary<string, double>
                 {
@@ -530,26 +528,24 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 startTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await this.GetAppOperationsAsync(correlationId);
+                operations = await GetAppOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
                 {
-                    customer = await operations.Customers.ById(customerId).GetAsync();
+                    customer = await operations.Customers.ById(customerId).GetAsync().ConfigureAwait(false);
                 }
                 else
                 {
-                    customer = await operations.Customers.ById(principal.CustomerId).GetAsync();
+                    customer = await operations.Customers.ById(principal.CustomerId).GetAsync().ConfigureAwait(false);
                 }
 
-                // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
                 {
                     { "ElapsedMilliseconds", DateTime.Now.Subtract(startTime).TotalMilliseconds }
                 };
 
-                // Capture the request for the customer summary for analysis.
                 eventProperties = new Dictionary<string, string>
                 {
                     { "CustomerId", principal.CustomerId },
@@ -557,7 +553,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                this.service.Telemetry.TrackEvent("GetCustomerAsync", eventProperties, eventMetrics);
+                service.Telemetry.TrackEvent(nameof(GetCustomerAsync), eventProperties, eventMetrics);
 
                 return customer;
             }
@@ -591,37 +587,35 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 startTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await this.GetAppOperationsAsync(correlationId);
+                operations = await GetAppOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 customers = new List<Customer>();
 
-                if (principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
                 {
-                    seekCustomers = await operations.Customers.GetAsync();
+                    seekCustomers = await operations.Customers.GetAsync().ConfigureAwait(false);
                     customersEnumerator = operations.Enumerators.Customers.Create(seekCustomers);
 
                     while (customersEnumerator.HasValue)
                     {
                         customers.AddRange(customersEnumerator.Current.Items);
-                        await customersEnumerator.NextAsync();
+                        await customersEnumerator.NextAsync().ConfigureAwait(false);
                     }
                 }
                 else
                 {
-                    customer = await operations.Customers.ById(principal.CustomerId).GetAsync();
+                    customer = await operations.Customers.ById(principal.CustomerId).GetAsync().ConfigureAwait(false);
                     customers.Add(customer);
                 }
 
-                // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
                 {
                     { "ElapsedMilliseconds", DateTime.Now.Subtract(startTime).TotalMilliseconds },
                     { "NumberOfCustomers", customers.Count }
                 };
 
-                // Capture the request for the customer summary for analysis.
                 eventProperties = new Dictionary<string, string>
                 {
                     { "CustomerId", principal.CustomerId },
@@ -668,14 +662,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 startTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await GetUserOperationsAsync(correlationId);
+                operations = await GetUserOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId) ||
                     principal.CustomerId.Equals(customerId))
                 {
-                    skus = await operations.Customers.ById(customerId).SubscribedSkus.GetAsync();
+                    skus = await operations.Customers.ById(customerId).SubscribedSkus.GetAsync().ConfigureAwait(false);
                 }
                 else
                 {
@@ -732,24 +726,22 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 startTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await this.GetUserOperationsAsync(correlationId);
+                operations = await GetUserOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (!principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
+                if (!principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
                 {
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
 
-                invoice = await operations.Invoices.ById(invoiceId).GetAsync();
+                invoice = await operations.Invoices.ById(invoiceId).GetAsync().ConfigureAwait(false);
 
-                // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
                 {
                     { "ElapsedMilliseconds", DateTime.Now.Subtract(startTime).TotalMilliseconds }
                 };
 
-                // Capture the request for the customer summary for analysis.
                 eventProperties = new Dictionary<string, string>
                 {
                     { "CustomerId", principal.CustomerId },
@@ -757,7 +749,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                this.service.Telemetry.TrackEvent("GetInvoiceAsync", eventProperties, eventMetrics);
+                service.Telemetry.TrackEvent(nameof(GetInvoiceAsync), eventProperties, eventMetrics);
 
                 return invoice;
             }
@@ -796,25 +788,23 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 startTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await this.GetUserOperationsAsync(correlationId);
+                operations = await GetUserOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (!principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
+                if (!principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
                 {
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
 
-                invoiceLineItems = await operations.Invoices.ById(invoiceId).By(billingProvider, invoiceLineItemType).GetAsync();
+                invoiceLineItems = await operations.Invoices.ById(invoiceId).By(billingProvider, invoiceLineItemType).GetAsync().ConfigureAwait(false);
 
-                // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
                 {
                     { "ElapsedMilliseconds", DateTime.Now.Subtract(startTime).TotalMilliseconds },
                     { "NumberOfInvoiceLineItems", invoiceLineItems.TotalCount }
                 };
 
-                // Capture the request for the customer summary for analysis.
                 eventProperties = new Dictionary<string, string>
                 {
                     { "CustomerId", principal.CustomerId },
@@ -822,7 +812,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                this.service.Telemetry.TrackEvent("GetInvoiceLineItemsAsync", eventProperties, eventMetrics);
+                service.Telemetry.TrackEvent(nameof(GetInvoiceLineItemsAsync), eventProperties, eventMetrics);
 
                 return new List<InvoiceLineItem>(invoiceLineItems.Items);
             }
@@ -854,25 +844,23 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 startTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await this.GetAppOperationsAsync(correlationId);
+                operations = await GetAppOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (!principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
+                if (!principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
                 {
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
 
-                invoices = await operations.Invoices.GetAsync();
+                invoices = await operations.Invoices.GetAsync().ConfigureAwait(false);
 
-                // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
                 {
                     { "ElapsedMilliseconds", DateTime.Now.Subtract(startTime).TotalMilliseconds },
                     { "NumberOfInvoices", invoices.TotalCount }
                 };
 
-                // Capture the request for the customer summary for analysis.
                 eventProperties = new Dictionary<string, string>
                 {
                     { "CustomerId", principal.CustomerId },
@@ -880,7 +868,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                this.service.Telemetry.TrackEvent("GetInvoicesAsync", eventProperties, eventMetrics);
+                service.Telemetry.TrackEvent("GetInvoicesAsync", eventProperties, eventMetrics);
 
                 return new List<Invoice>(invoices.Items);
             }
@@ -912,26 +900,24 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 startTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await this.GetAppOperationsAsync(correlationId);
+                operations = await GetAppOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                offers = await this.service.Cache.FetchAsync<ResourceCollection<Offer>>(CacheDatabaseType.DataStructures, OffersKey);
+                offers = await service.Cache.FetchAsync<ResourceCollection<Offer>>(CacheDatabaseType.DataStructures, OffersKey).ConfigureAwait(false);
 
                 if (offers == null)
                 {
                     offers = await operations.Offers.ByCountry("US").GetAsync();
-                    await this.service.Cache.StoreAsync(CacheDatabaseType.DataStructures, OffersKey, offers, TimeSpan.FromDays(1));
+                    await service.Cache.StoreAsync(CacheDatabaseType.DataStructures, OffersKey, offers, TimeSpan.FromDays(1)).ConfigureAwait(false);
                 }
 
-                // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
                 {
                     { "ElapsedMilliseconds", DateTime.Now.Subtract(startTime).TotalMilliseconds },
                     { "NumberOfInvoices", offers.TotalCount }
                 };
 
-                // Capture the request for the customer summary for analysis.
                 eventProperties = new Dictionary<string, string>
                 {
                     { "CustomerId", principal.CustomerId },
@@ -939,7 +925,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                this.service.Telemetry.TrackEvent("GetOffersAsync", eventProperties, eventMetrics);
+                service.Telemetry.TrackEvent(nameof(GetOffersAsync), eventProperties, eventMetrics);
 
                 return new List<Offer>(offers.Items);
             }
@@ -971,13 +957,13 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 executionTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await GetAppOperationsAsync(correlationId);
+                operations = await GetAppOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
                 {
-                    requests = await operations.ServiceRequests.GetAsync();
+                    requests = await operations.ServiceRequests.GetAsync().ConfigureAwait(false);
                 }
                 else
                 {
@@ -1038,17 +1024,17 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 startTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await this.GetAppOperationsAsync(correlationId);
+                operations = await GetAppOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
                 {
-                    subscription = await operations.Customers.ById(customerId).Subscriptions.ById(subscriptionId).GetAsync();
+                    subscription = await operations.Customers.ById(customerId).Subscriptions.ById(subscriptionId).GetAsync().ConfigureAwait(false);
                 }
                 else
                 {
-                    subscription = await operations.Customers.ById(principal.CustomerId).Subscriptions.ById(subscriptionId).GetAsync();
+                    subscription = await operations.Customers.ById(principal.CustomerId).Subscriptions.ById(subscriptionId).GetAsync().ConfigureAwait(false);
                 }
 
                 eventMetrics = new Dictionary<string, double>
@@ -1100,27 +1086,25 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 startTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await this.GetAppOperationsAsync(correlationId);
+                operations = await GetAppOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
                 {
-                    subscriptions = await operations.Customers.ById(customerId).Subscriptions.GetAsync();
+                    subscriptions = await operations.Customers.ById(customerId).Subscriptions.GetAsync().ConfigureAwait(false);
                 }
                 else
                 {
-                    subscriptions = await operations.Customers.ById(principal.CustomerId).Subscriptions.GetAsync();
+                    subscriptions = await operations.Customers.ById(principal.CustomerId).Subscriptions.GetAsync().ConfigureAwait(false);
                 }
 
-                // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
                 {
                     { "ElapsedMilliseconds", DateTime.Now.Subtract(startTime).TotalMilliseconds },
                     { "NumberOfSubscriptions", subscriptions.TotalCount }
                 };
 
-                // Capture the request for the customer summary for analysis.
                 eventProperties = new Dictionary<string, string>
                 {
                     { "CustomerId", principal.CustomerId },
@@ -1128,7 +1112,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                this.service.Telemetry.TrackEvent("GetSubscriptionsAsync", eventProperties, eventMetrics);
+                service.Telemetry.TrackEvent(nameof(GetSubscriptionsAsync), eventProperties, eventMetrics);
 
                 return new List<Subscription>(subscriptions.Items);
             }
@@ -1168,45 +1152,43 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 invokeTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await this.GetAppOperationsAsync(correlationId);
+                operations = await GetAppOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 usageRecords = new List<AzureUtilizationRecord>();
 
-                if (principal.CustomerId.Equals(this.service.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
                 {
                     records = await operations.Customers.ById(customerId).Subscriptions.ById(subscriptionId)
-                        .Utilization.Azure.QueryAsync(startTime, endTime);
+                        .Utilization.Azure.QueryAsync(startTime, endTime).ConfigureAwait(false);
                     usageEnumerator = operations.Enumerators.Utilization.Azure.Create(records);
 
                     while (usageEnumerator.HasValue)
                     {
                         usageRecords.AddRange(usageEnumerator.Current.Items);
-                        await usageEnumerator.NextAsync();
+                        await usageEnumerator.NextAsync().ConfigureAwait(false);
                     }
                 }
                 else
                 {
                     records = await operations.Customers.ById(principal.CustomerId).Subscriptions.ById(subscriptionId)
-                        .Utilization.Azure.QueryAsync(startTime, endTime);
+                        .Utilization.Azure.QueryAsync(startTime, endTime).ConfigureAwait(false);
                     usageEnumerator = operations.Enumerators.Utilization.Azure.Create(records);
 
                     while (usageEnumerator.HasValue)
                     {
                         usageRecords.AddRange(usageEnumerator.Current.Items);
-                        await usageEnumerator.NextAsync();
+                        await usageEnumerator.NextAsync().ConfigureAwait(false);
                     }
                 }
 
-                // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
                 {
                     { "ElapsedMilliseconds", DateTime.Now.Subtract(invokeTime).TotalMilliseconds },
                     { "NumberOfUsageRecords", usageRecords.Count }
                 };
 
-                // Capture the request for the customer summary for analysis.
                 eventProperties = new Dictionary<string, string>
                 {
                     { "CustomerId", principal.CustomerId },
@@ -1214,7 +1196,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                this.service.Telemetry.TrackEvent("GetSubscriptionUsageAsync", eventProperties, eventMetrics);
+                service.Telemetry.TrackEvent(nameof(GetSubscriptionUsageAsync), eventProperties, eventMetrics);
 
                 return usageRecords;
             }
@@ -1257,14 +1239,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 startTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await GetUserOperationsAsync(correlationId);
+                operations = await GetUserOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId) ||
                     principal.CustomerId.Equals(customerId))
                 {
-                    user = await operations.Customers.ById(customerId).Users.ById(userId).GetAsync();
+                    user = await operations.Customers.ById(customerId).Users.ById(userId).GetAsync().ConfigureAwait(false);
                 }
                 else
                 {
@@ -1325,14 +1307,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 executionTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await GetUserOperationsAsync(correlationId);
+                operations = await GetUserOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId) ||
                     principal.CustomerId.Equals(customerId))
                 {
-                    licenses = await operations.Customers.ById(customerId).Users.ById(userId).Licenses.GetAsync();
+                    licenses = await operations.Customers.ById(customerId).Users.ById(userId).Licenses.GetAsync().ConfigureAwait(false);
                 }
                 else
                 {
@@ -1394,28 +1376,26 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 startTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await GetAppOperationsAsync(correlationId);
+                operations = await GetAppOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
                 {
                     updatedSubscription = await operations.Customers.ById(customerId).Subscriptions
-                        .ById(subscription.Id).PatchAsync(subscription);
+                        .ById(subscription.Id).PatchAsync(subscription).ConfigureAwait(false);
                 }
                 else
                 {
                     updatedSubscription = await operations.Customers.ById(principal.CustomerId).Subscriptions
-                        .ById(subscription.Id).PatchAsync(subscription);
+                        .ById(subscription.Id).PatchAsync(subscription).ConfigureAwait(false);
                 }
 
-                // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
                 {
                     { "ElapsedMilliseconds", DateTime.Now.Subtract(startTime).TotalMilliseconds }
                 };
 
-                // Capture the request for the customer summary for analysis.
                 eventProperties = new Dictionary<string, string>
                 {
                     { "CustomerId", principal.CustomerId },
@@ -1461,27 +1441,25 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 executionTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await GetUserOperationsAsync(correlationId);
+                operations = await GetUserOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId) ||
                     principal.CustomerId.Equals(customerId))
                 {
-                    user = await operations.Customers.ById(customerId).Users.ById(userId).PatchAsync(entity);
+                    user = await operations.Customers.ById(customerId).Users.ById(userId).PatchAsync(entity).ConfigureAwait(false);
                 }
                 else
                 {
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
 
-                // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
                 {
                     { "ElapsedMilliseconds", DateTime.Now.Subtract(executionTime).TotalMilliseconds }
                 };
 
-                // Capture the request for the customer summary for analysis.
                 eventProperties = new Dictionary<string, string>
                 {
                     { "CustomerId", principal.CustomerId },
@@ -1534,14 +1512,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 executionTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await GetUserOperationsAsync(correlationId);
+                operations = await GetUserOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
                 if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId) ||
                     principal.CustomerId.Equals(customerId))
                 {
-                    await operations.Customers.ById(customerId).Users.ById(userId).LicenseUpdates.CreateAsync(entity);
+                    await operations.Customers.ById(customerId).Users.ById(userId).LicenseUpdates.CreateAsync(entity).ConfigureAwait(false);
                 }
                 else
                 {
@@ -1580,7 +1558,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         {
             if (appOperations == null || appOperations.Credentials.ExpiresAt > DateTime.UtcNow)
             {
-                IPartnerCredentials credentials = await GetPartnerCenterCredentialsAsync();
+                IPartnerCredentials credentials = await GetPartnerCenterCredentialsAsync().ConfigureAwait(false);
 
                 lock (appLock)
                 {
@@ -1610,7 +1588,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             // Attempt to obtain the Partner Center token from the cache.
             IPartnerCredentials credentials =
                  await service.Cache.FetchAsync<Models.PartnerCenterToken>(
-                     CacheDatabaseType.Authentication, PartnerCenterCacheKey);
+                     CacheDatabaseType.Authentication, PartnerCenterCacheKey).ConfigureAwait(false);
 
             if (credentials != null && !credentials.IsExpired())
             {
@@ -1621,9 +1599,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             credentials = await PartnerCredentials.Instance.GenerateByApplicationCredentialsAsync(
                 service.Configuration.PartnerCenterApplicationId,
                 service.Configuration.PartnerCenterApplicationSecret.ToUnsecureString(),
-                service.Configuration.PartnerCenterApplicationTenantId);
+                service.Configuration.PartnerCenterApplicationTenantId).ConfigureAwait(false);
 
-            await service.Cache.StoreAsync(CacheDatabaseType.Authentication, PartnerCenterCacheKey, credentials);
+            await service.Cache.StoreAsync(CacheDatabaseType.Authentication, PartnerCenterCacheKey, credentials).ConfigureAwait(false);
 
             return credentials;
         }
@@ -1644,11 +1622,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     ApplicationSecret = service.Configuration.ApplicationSecret,
                     UseCache = true
                 },
-                service.AccessToken.UserAssertionToken);
+                service.AccessToken.UserAssertionToken).ConfigureAwait(false);
 
             IPartnerCredentials credentials = await PartnerCredentials.Instance.GenerateByUserCredentialsAsync(
                 service.Configuration.ApplicationId,
-                new AuthenticationToken(token.AccessToken, token.ExpiresOn));
+                new AuthenticationToken(token.AccessToken, token.ExpiresOn)).ConfigureAwait(false);
 
             IAggregatePartner userOperations = PartnerService.Instance.CreatePartnerOperations(credentials);
 

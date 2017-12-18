@@ -68,7 +68,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
                 {
                     try
                     {
-                        bundle = await client.GetSecretAsync(service.Configuration.KeyVaultEndpoint, identifier);
+                        bundle = await client.GetSecretAsync(service.Configuration.KeyVaultEndpoint, identifier).ConfigureAwait(false);
                     }
                     catch (KeyVaultErrorException ex)
                     {
@@ -83,13 +83,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
                     }
                 }
 
-                // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
                 {
                     { "ElapsedMilliseconds", DateTime.Now.Subtract(executionTime).TotalMilliseconds }
                 };
 
-                // Capture the request for the customer summary for analysis.
                 eventProperties = new Dictionary<string, string>
                 {
                     { "Identifier", identifier }
@@ -135,10 +133,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
                 using (IKeyVaultClient client = GetAzureKeyVaultClient())
                 {
                     await client.SetSecretAsync(
-                        service.Configuration.KeyVaultEndpoint, identifier, value.ToUnsecureString());
+                        service.Configuration.KeyVaultEndpoint, identifier, value.ToUnsecureString()).ConfigureAwait(false);
                 }
 
-                // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
                 {
                     { "ElapsedMilliseconds", DateTime.Now.Subtract(executionTime).TotalMilliseconds }

@@ -27,7 +27,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
             try
             {
-                service = MvcApplication.UnityContainer.Resolve<IExplorerService>();
+                service = UnityConfig.Container.Resolve<IExplorerService>();
 
                 if (filterContext?.HttpContext != null && filterContext.Exception != null)
                 {

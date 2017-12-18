@@ -52,7 +52,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                 CustomerId = customerId
             };
 
-            return this.PartialView(newUserModel);
+            return PartialView(newUserModel);
         }
 
         /// <summary>
@@ -84,12 +84,12 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
                 client = new GraphClient(Service, newUserModel.CustomerId);
 
-                await Service.PartnerOperations.CreateUserAsync(newUserModel.CustomerId, user);
+                await Service.PartnerOperations.CreateUserAsync(newUserModel.CustomerId, user).ConfigureAwait(false);
 
                 UsersModel usersModel = new UsersModel()
                 {
                     CustomerId = newUserModel.CustomerId,
-                    Users = await client.GetUsersAsync()
+                    Users = await client.GetUsersAsync().ConfigureAwait(false)
                 };
 
                 return PartialView("List", usersModel);
@@ -118,7 +118,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
             customerId.AssertNotEmpty(nameof(customerId));
             userId.AssertNotEmpty(nameof(userId));
 
-            await Service.PartnerOperations.DeleteUserAsync(customerId, userId);
+            await Service.PartnerOperations.DeleteUserAsync(customerId, userId).ConfigureAwait(false);
 
             return new HttpResponseMessage(HttpStatusCode.OK);
         }
@@ -145,7 +145,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                customerUser = await Service.PartnerOperations.GetUserAsync(customerId, userId);
+                customerUser = await Service.PartnerOperations.GetUserAsync(customerId, userId).ConfigureAwait(false);
 
                 editUserModel = new EditUserModel()
                 {
@@ -181,7 +181,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
             try
             {
                 client = new GraphClient(Service, editUserModel.CustomerId);
-                customerUser = await Service.PartnerOperations.GetUserAsync(editUserModel.CustomerId, editUserModel.UserId);
+                customerUser = await Service.PartnerOperations.GetUserAsync(
+                    editUserModel.CustomerId,
+                    editUserModel.UserId).ConfigureAwait(false);
 
                 customerUser.DisplayName = editUserModel.DisplayName;
                 customerUser.FirstName = editUserModel.FirstName;
@@ -192,14 +194,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                 await Service.PartnerOperations.UpdateUserAsync(
                     editUserModel.CustomerId,
                     editUserModel.UserId,
-                    customerUser);
+                    customerUser).ConfigureAwait(false);
 
-                await ProcessLicenseModifications(editUserModel);
+                await ProcessLicenseModifications(editUserModel).ConfigureAwait(false);
 
                 UsersModel usersModel = new UsersModel()
                 {
                     CustomerId = editUserModel.CustomerId,
-                    Users = await client.GetUsersAsync()
+                    Users = await client.GetUsersAsync().ConfigureAwait(false)
                 };
 
                 return PartialView("List", usersModel);
@@ -232,7 +234,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                 UsersModel usersModel = new UsersModel()
                 {
                     CustomerId = customerId,
-                    Users = await client.GetUsersAsync()
+                    Users = await client.GetUsersAsync().ConfigureAwait(false)
                 };
 
                 return PartialView(usersModel);
@@ -263,8 +265,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
             {
                 values = new List<LicenseModel>();
 
-                licenses = await Service.PartnerOperations.GetUserLicensesAsync(customerId, userId);
-                subscribedSkus = await Service.PartnerOperations.GetCustomerSubscribedSkusAsync(customerId);
+                licenses = await Service.PartnerOperations.GetUserLicensesAsync(customerId, userId).ConfigureAwait(false);
+                subscribedSkus = await Service.PartnerOperations.GetCustomerSubscribedSkusAsync(customerId).ConfigureAwait(false);
 
                 foreach (SubscribedSku sku in subscribedSkus.Items)
                 {
@@ -309,7 +311,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
             try
             {
                 assignments = new List<LicenseAssignment>();
-                current = await GetLicenses(model.CustomerId, model.UserId);
+                current = await GetLicenses(model.CustomerId, model.UserId).ConfigureAwait(false);
                 licenseUpdate = new LicenseUpdate();
                 removals = new List<string>();
 
@@ -344,7 +346,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
                 if (assignments.Count > 0 || removals.Count > 0)
                 {
-                    await Service.PartnerOperations.UpdateUserLicensesAsync(model.CustomerId, model.UserId, licenseUpdate);
+                    await Service.PartnerOperations.UpdateUserLicensesAsync(
+                        model.CustomerId,
+                        model.UserId,
+                        licenseUpdate).ConfigureAwait(false);
                 }
             }
             finally

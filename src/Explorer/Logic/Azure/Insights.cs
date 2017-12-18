@@ -47,7 +47,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
         /// </summary>
         /// <param name="subscriptionId">The subscription identifier.</param>
         /// <param name="token">Valid JSON Web Token (JWT).</param>
-        /// <exception cref="System.ArgumentNullException">
+        /// <exception cref="ArgumentNullException">
         /// subscriptionId
         /// or
         /// token
@@ -57,7 +57,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
             subscriptionId.AssertNotEmpty(nameof(subscriptionId));
             token.AssertNotEmpty(nameof(token));
 
-            this.client = new InsightsClient(new TokenCredentials(token));
+            client = new InsightsClient(new TokenCredentials(token));
             this.subscriptionId = subscriptionId;
         }
 
@@ -66,7 +66,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
         /// </summary>
         public void Dispose()
         {
-            this.Dispose(true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
@@ -83,7 +83,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
 
             try
             {
-                this.client.SubscriptionId = this.subscriptionId;
+                client.SubscriptionId = subscriptionId;
 
                 queryEndDate = DateTime.UtcNow;
                 queryStartDate = DateTime.UtcNow.AddMonths(-1);
@@ -93,7 +93,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
                     && (eventData.EventTimestamp <= queryEndDate)
                     && (eventData.ResourceProvider == ResourceProviderName)));
 
-                events = await this.client.Events.ListAsync(query);
+                events = await client.Events.ListAsync(query).ConfigureAwait(false);
 
                 return events.Select(x => new AzureHealthEvent
                 {
@@ -119,19 +119,19 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
         /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (this.disposed)
+            if (disposed)
             {
                 return;
             }
 
-            this.client.Dispose();
+            client.Dispose();
 
             if (disposing)
             {
                 GC.SuppressFinalize(this);
             }
 
-            this.disposed = true;
+            disposed = true;
         }
     }
 }

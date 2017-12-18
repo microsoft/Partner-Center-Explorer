@@ -65,7 +65,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Office
 
                 records = await service.Communication.GetAsync<Result<OfficeHealthEvent>>(
                     requestUri,
-                    token.AccessToken);
+                    token.AccessToken).ConfigureAwait(false);
 
                 return records.Value.ToList<IHealthEvent>();
             }

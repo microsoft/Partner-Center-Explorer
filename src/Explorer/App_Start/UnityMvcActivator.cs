@@ -1,17 +1,16 @@
 // -----------------------------------------------------------------------
-// <copyright file="UnityMvcActivator.cs" company="Microsoft">
+// <copyright file="UnityConfig.cs" company="Microsoft">
 //     Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
 // -----------------------------------------------------------------------
 
-[assembly: WebActivatorEx.PreApplicationStartMethod(typeof(Microsoft.Store.PartnerCenter.Explorer.UnityMvcActivator), "Start")]
-[assembly: WebActivatorEx.ApplicationShutdownMethod(typeof(Microsoft.Store.PartnerCenter.Explorer.UnityMvcActivator), "Shutdown")]
+[assembly: WebActivatorEx.PreApplicationStartMethod(typeof(Microsoft.Store.PartnerCenter.Explorer.UnityMvcActivator), nameof(Microsoft.Store.PartnerCenter.Explorer.UnityMvcActivator.Start))]
+[assembly: WebActivatorEx.ApplicationShutdownMethod(typeof(Microsoft.Store.PartnerCenter.Explorer.UnityMvcActivator), nameof(Microsoft.Store.PartnerCenter.Explorer.UnityMvcActivator.Shutdown))]
 
 namespace Microsoft.Store.PartnerCenter.Explorer
 {
     using System.Linq;
     using System.Web.Mvc;
-    using Unity;
     using Unity.AspNet.Mvc;
 
     /// <summary>
@@ -22,14 +21,15 @@ namespace Microsoft.Store.PartnerCenter.Explorer
         /// <summary>
         /// Integrates Unity when the application starts.
         /// </summary>
-        public static void Start()
+        public static void Start() 
         {
-            IUnityContainer container = UnityConfig.GetConfiguredContainer();
-
             FilterProviders.Providers.Remove(FilterProviders.Providers.OfType<FilterAttributeFilterProvider>().First());
-            FilterProviders.Providers.Add(new UnityFilterAttributeFilterProvider(container));
+            FilterProviders.Providers.Add(new UnityFilterAttributeFilterProvider(UnityConfig.Container));
 
-            DependencyResolver.SetResolver(new UnityDependencyResolver(container));
+            DependencyResolver.SetResolver(new UnityDependencyResolver(UnityConfig.Container));
+
+            // TODO: Uncomment if you want to use PerRequestLifetimeManager
+            // Microsoft.Web.Infrastructure.DynamicModuleHelper.DynamicModuleUtility.RegisterModule(typeof(UnityPerRequestHttpModule));
         }
 
         /// <summary>
@@ -37,8 +37,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
         /// </summary>
         public static void Shutdown()
         {
-            IUnityContainer container = UnityConfig.GetConfiguredContainer();
-            container.Dispose();
+            UnityConfig.Container.Dispose();
         }
     }
 }

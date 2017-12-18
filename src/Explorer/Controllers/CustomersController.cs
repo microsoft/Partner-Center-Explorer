@@ -6,7 +6,6 @@
 
 namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Net;
@@ -46,9 +45,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         {
             customerId.AssertNotEmpty(nameof(customerId));
 
-            if (this.Service.Configuration.IsIntegrationSandbox)
+            if (Service.Configuration.IsIntegrationSandbox)
             {
-                await this.Service.PartnerOperations.DeleteCustomerAsync(customerId);
+                await Service.PartnerOperations.DeleteCustomerAsync(customerId).ConfigureAwait(false);
             }
 
             return new HttpResponseMessage(HttpStatusCode.NoContent);
@@ -61,7 +60,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         [HttpGet]
         public PartialViewResult Create()
         {
-            return this.PartialView();
+            return PartialView();
         }
 
         /// <summary>
@@ -107,7 +106,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                     }
                 };
 
-                entity = await this.Service.PartnerOperations.CreateCustomerAsync(entity);
+                entity = await Service.PartnerOperations.CreateCustomerAsync(entity).ConfigureAwait(false);
 
                 createdCustomerModel = new CreatedCustomerModel()
                 {
@@ -116,7 +115,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                     Username = entity.UserCredentials.UserName
                 };
 
-                return this.PartialView("CreatedSuccessfully", createdCustomerModel);
+                return PartialView("CreatedSuccessfully", createdCustomerModel);
             }
             finally
             {
@@ -132,11 +131,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         {
             CustomersModel customersModel = new CustomersModel()
             {
-                Customers = await this.GetCustomerModelsAsync(),
-                IsSandboxEnvironment = this.Service.Configuration.IsIntegrationSandbox
+                Customers = await GetCustomerModelsAsync().ConfigureAwait(false),
+                IsSandboxEnvironment = Service.Configuration.IsIntegrationSandbox
             };
 
-            return this.PartialView(customersModel);
+            return PartialView(customersModel);
         }
 
         /// <summary>
@@ -145,7 +144,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// <returns>The HTML template for the index page.</returns>
         public ActionResult Index()
         {
-            return this.View();
+            return View();
         }
 
         /// <summary>
@@ -165,7 +164,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                customer = await this.Service.PartnerOperations.GetCustomerAsync(customerId);
+                customer = await Service.PartnerOperations.GetCustomerAsync(customerId).ConfigureAwait(false);
 
                 customerModel = new CustomerModel()
                 {
@@ -176,7 +175,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                     CustomerId = customer.CompanyProfile.TenantId
                 };
 
-                return this.View(customerModel);
+                return View(customerModel);
             }
             finally
             {
@@ -195,7 +194,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                customers = await this.Service.PartnerOperations.GetCustomersAsync();
+                customers = await Service.PartnerOperations.GetCustomersAsync().ConfigureAwait(false);
 
                 return customers.Select(item => new CustomerModel
                 {

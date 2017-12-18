@@ -56,8 +56,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                customer = await Service.PartnerOperations.GetCustomerAsync(customerId);
-                subscription = await Service.PartnerOperations.GetSubscriptionAsync(customerId, subscriptionId);
+                customer = await Service.PartnerOperations.GetCustomerAsync(customerId).ConfigureAwait(false);
+                subscription = await Service.PartnerOperations.GetSubscriptionAsync(customerId, subscriptionId).ConfigureAwait(false);
 
                 healthModel = new SubscriptionHealthModel
                 {
@@ -74,7 +74,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                 }
                 else
                 {
-                    healthModel.HealthEvents = await GetOfficeSubscriptionHealthAsync(customerId);
+                    healthModel.HealthEvents = await GetOfficeSubscriptionHealthAsync(customerId).ConfigureAwait(false);
                 }
 
                 return View(healthModel.ViewModel, healthModel);
@@ -115,11 +115,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                         ApplicationSecret = Service.Configuration.ApplicationSecret,
                         UseCache = true
                     },
-                    Service.AccessToken.UserAssertionToken);
+                    Service.AccessToken.UserAssertionToken).ConfigureAwait(false);
 
                 using (Insights insights = new Insights(subscriptionId, token.AccessToken))
                 {
-                    return await insights.GetHealthEventsAsync();
+                    return await insights.GetHealthEventsAsync().ConfigureAwait(false);
                 }
             }
             finally
@@ -150,10 +150,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                         ApplicationId = Service.Configuration.ApplicationId,
                         ApplicationSecret = Service.Configuration.ApplicationSecret,
                         UseCache = true
-                    });
+                    }).ConfigureAwait(false);
 
                 comm = new ServiceCommunications(Service, token);
-                return await comm.GetCurrentStatusAsync(customerId);
+                return await comm.GetCurrentStatusAsync(customerId).ConfigureAwait(false);
             }
             finally
             {

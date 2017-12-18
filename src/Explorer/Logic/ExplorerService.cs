@@ -89,7 +89,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     return telemetry;
                 }
 
-                if (string.IsNullOrEmpty(this.Configuration.InstrumentationKey))
+                if (string.IsNullOrEmpty(Configuration.InstrumentationKey))
                 {
                     telemetry = new EmptyTelemetryProvider();
                 }
@@ -113,7 +113,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// <returns>An instance of <see cref="Task"/> that represents the asynchronous operation.</returns>
         public async Task InitializeAsync()
         {
-            await Configuration.InitializeAsync();
+            await Configuration.InitializeAsync().ConfigureAwait(false);
         }
     }
 }

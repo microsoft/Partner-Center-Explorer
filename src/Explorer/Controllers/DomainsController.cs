@@ -43,7 +43,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                 return Json(false, JsonRequestBehavior.AllowGet);
             }
 
-            bool exists = await Service.PartnerOperations.CheckDomainAsync($"{primaryDomain}.onmicrosoft.com");
+            bool exists = await Service.PartnerOperations.CheckDomainAsync($"{primaryDomain}.onmicrosoft.com").ConfigureAwait(false);
 
             return Json(!exists, JsonRequestBehavior.AllowGet);
         }
@@ -66,7 +66,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
             try
             {
                 client = new GraphClient(Service, customerId);
-                domains = await client.GetDomainsAsync();
+                domains = await client.GetDomainsAsync().ConfigureAwait(false);
 
                 return Json(domains, JsonRequestBehavior.AllowGet);
             }

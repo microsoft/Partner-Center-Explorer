@@ -43,7 +43,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                offers = await this.Service.PartnerOperations.GetOffersAsync();
+                offers = await Service.PartnerOperations.GetOffersAsync().ConfigureAwait(false);
 
                 offersModel = new OffersModel
                 {
@@ -64,7 +64,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                     CustomerId = customerId
                 };
 
-                return this.PartialView("Offers", offersModel);
+                return PartialView("Offers", offersModel);
             }
             finally
             {
@@ -90,8 +90,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                offers = await this.Service.PartnerOperations.GetOffersAsync();
-                return this.Json(offers.Single(x => x.Id.Equals(offerId, StringComparison.CurrentCultureIgnoreCase)), JsonRequestBehavior.AllowGet);
+                offers = await Service.PartnerOperations.GetOffersAsync().ConfigureAwait(false);
+
+                return Json(
+                    offers.Single(x => x.Id.Equals(offerId, StringComparison.CurrentCultureIgnoreCase)), 
+                    JsonRequestBehavior.AllowGet);
             }
             finally
             {

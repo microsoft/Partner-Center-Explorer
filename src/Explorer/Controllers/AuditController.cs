@@ -38,7 +38,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         {
             AuditRecordsModel auditRecordsModel = new AuditRecordsModel()
             {
-                Records = await this.Service.PartnerOperations.GetAuditRecordsAsync(startDate, endDate)
+                Records = await Service.PartnerOperations.GetAuditRecordsAsync(startDate, endDate).ConfigureAwait(false)
             };
 
             return PartialView("Records", auditRecordsModel);
@@ -50,7 +50,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// <returns>Returns an empty view.</returns>
         public ActionResult Search()
         {
-            return this.View();
+            return View();
         }
     }
 }

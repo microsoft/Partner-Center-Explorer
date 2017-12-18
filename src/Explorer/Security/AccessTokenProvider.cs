@@ -108,7 +108,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
                     resource,
                     new ClientCredential(
                         credential.ApplicationId,
-                        secret));
+                        secret)).ConfigureAwait(false);
 
                 return authResult;
             }
@@ -170,7 +170,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
                     new ClientCredential(
                         credential.ApplicationId,
                         secret),
-                    new UserAssertion(token, AssertionType));
+                    new UserAssertion(token, AssertionType)).ConfigureAwait(false);
 
                 return authResult;
             }

@@ -30,7 +30,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// <returns>The HTML template for the index page.</returns>
         public ActionResult Index()
         {
-            return this.View();
+            return View();
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// <returns>The HTML template for the error page.</returns>
         public ActionResult Error()
         {
-            return this.View();
+            return View();
         }
     }
 }
