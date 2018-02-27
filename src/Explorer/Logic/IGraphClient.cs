@@ -8,6 +8,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Microsoft.Graph;
     using Models;
 
     /// <summary>
@@ -20,10 +21,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// </summary>
         /// <param name="objectId">Object identifier for the object to be checked.</param>
         /// <returns>A list of roles that that are associated with the specified object identifier.</returns>
-        /// <exception cref="System.ArgumentException">
-        /// <paramref name="objectId"/> is empty or null.
-        /// </exception>
         Task<List<RoleModel>> GetDirectoryRolesAsync(string objectId);
+
+        /// <summary>
+        /// Gets the service configuration records for the specified domain. 
+        /// </summary>
+        /// <param name="domain">Name of the domain</param>
+        /// <returns>A list of service configuration records for the specified domain.</returns>
+        Task<List<DomainDnsRecord>> GetDomainConfigurationRecordsAsync(string domain);
 
         /// <summary>
         /// Gets a list of domains configured for the customer.

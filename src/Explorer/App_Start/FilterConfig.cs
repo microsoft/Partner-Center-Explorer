@@ -7,7 +7,7 @@
 namespace Microsoft.Store.PartnerCenter.Explorer
 {
     using System.Web.Mvc;
-    using Logic; 
+    using Logic;
     using Security;
 
     /// <summary>

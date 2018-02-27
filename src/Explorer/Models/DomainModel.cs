@@ -7,10 +7,9 @@
 namespace Microsoft.Store.PartnerCenter.Explorer.Models
 {
     using System.Collections.Generic;
-    using Azure.ActiveDirectory.GraphClient;
 
     /// <summary>
-    /// Represents a domain obtained from Azure AD Graph API.
+    /// Represents a domain obtained from Microsoft Graph.
     /// </summary>
     public class DomainModel
     {
@@ -55,13 +54,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
         public string Name { get; set; }
 
         /// <summary>
-        /// Gets or sets the service configuration records.
-        /// </summary>
-        public IList<IDomainDnsRecord> ServiceConfigurationRecords { get; set; }
-
-        /// <summary>
         /// Gets or sets the supported services.
         /// </summary>
-        public IList<string> SupportedServices { get; set; }
+        public IEnumerable<string> SupportedServices { get; set; }
     }
 }

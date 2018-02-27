@@ -16,8 +16,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     using CsvHelper;
     using Logic;
     using Models;
-    using PartnerCenter.Models;
     using PartnerCenter.Models.Invoices;
+    using Providers;
     using Security;
 
     /// <summary>
@@ -30,7 +30,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// Initializes a new instance of the <see cref="InvoicesController"/> class.
         /// </summary>
         /// <param name="service">Provides access to core services.</param>
-        public InvoicesController(IExplorerService service) : base(service)
+        public InvoicesController(IExplorerProvider provider) : base(provider)
         {
         }
 
@@ -66,7 +66,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         {
             InvoicesModel invoicesModel = new InvoicesModel()
             {
-                Invoices = await Service.PartnerOperations.GetInvoicesAsync().ConfigureAwait(false)
+                Invoices = await Provider.PartnerOperations.GetInvoicesAsync().ConfigureAwait(false)
             };
 
             return View(invoicesModel);
@@ -231,12 +231,12 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                     return lineItems;
                 }
 
-                invoice = await Service.PartnerOperations.GetInvoiceAsync(invoiceId).ConfigureAwait(false);
+                invoice = await Provider.PartnerOperations.GetInvoiceAsync(invoiceId).ConfigureAwait(false);
                 lineItems = new List<InvoiceLineItem>();
 
                 foreach (InvoiceDetail detail in invoice.InvoiceDetails)
                 {
-                    data = await Service.PartnerOperations.GetInvoiceLineItemsAsync(
+                    data = await Provider.PartnerOperations.GetInvoiceLineItemsAsync(
                         invoiceId, 
                         detail.BillingProvider, 
                         detail.InvoiceLineItemType).ConfigureAwait(false);

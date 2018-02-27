@@ -10,7 +10,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     using System.Threading.Tasks;
     using System.Web.Mvc;
     using Logic;
+    using Microsoft.Graph;
     using Models;
+    using Providers;
     using Security;
 
     /// <summary>
@@ -23,8 +25,32 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// Initializes a new instance of the <see cref="DomainsController"/> class.
         /// </summary>
         /// <param name="service">Provides access to core services.</param>
-        public DomainsController(IExplorerService service) : base(service)
+        public DomainsController(IExplorerProvider provider) : base(provider)
         {
+        }
+
+        /// <summary>
+        /// Obtains the service configuration records for the specified domain. 
+        /// </summary>
+        /// <param name="domain">Name of the domain</param>
+        /// <returns>A collection of service configuration records for the specified domain in JSON.</returns>
+        public async Task<PartialViewResult> ConfigurationRecords(string customerId, string domain)
+        {
+            GraphClient client;
+            List<DomainDnsRecord> records;
+
+            try
+            {
+                client = new GraphClient(Provider, customerId);
+                records = await client.GetDomainConfigurationRecordsAsync(domain).ConfigureAwait(false);
+
+                return PartialView(new ConfigurationRecordsModel { ServiceConfigurationRecords = records });
+            }
+            finally
+            {
+                client = null;
+                records = null;
+            }
         }
 
         /// <summary>
@@ -43,7 +69,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                 return Json(false, JsonRequestBehavior.AllowGet);
             }
 
-            bool exists = await Service.PartnerOperations.CheckDomainAsync($"{primaryDomain}.onmicrosoft.com").ConfigureAwait(false);
+            bool exists = await Provider.PartnerOperations.CheckDomainAsync($"{primaryDomain}.onmicrosoft.com").ConfigureAwait(false);
 
             return Json(!exists, JsonRequestBehavior.AllowGet);
         }
@@ -65,7 +91,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                client = new GraphClient(Service, customerId);
+                client = new GraphClient(Provider, customerId);
                 domains = await client.GetDomainsAsync().ConfigureAwait(false);
 
                 return Json(domains, JsonRequestBehavior.AllowGet);

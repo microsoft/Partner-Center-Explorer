@@ -7,6 +7,7 @@
 namespace Microsoft.Store.PartnerCenter.Explorer.Models
 {
     using System.Collections.Generic;
+    using Microsoft.Graph;
 
     /// <summary>
     /// Model for domain configuration records obtain from Azure AD Graph API.
@@ -16,6 +17,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
         /// <summary>
         /// Gets or sets the service configuration records.
         /// </summary>
-        public List<ServiceConfigurationRecordModel> ServiceConfigurationRecords { get; set; }
+        public List<DomainDnsRecord> ServiceConfigurationRecords { get; set; }
     }
 }

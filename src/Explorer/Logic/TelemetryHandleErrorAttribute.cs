@@ -8,6 +8,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 {
     using System;
     using System.Web.Mvc;
+    using Providers;
     using Unity;
 
     /// <summary>
@@ -23,17 +24,17 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// <param name="filterContext">The action-filter context.</param>
         public override void OnException(ExceptionContext filterContext)
         {
-            IExplorerService service;
+            IExplorerProvider provider;
 
             try
             {
-                service = UnityConfig.Container.Resolve<IExplorerService>();
+                provider = UnityConfig.Container.Resolve<IExplorerProvider>();
 
                 if (filterContext?.HttpContext != null && filterContext.Exception != null)
                 {
                     if (filterContext.HttpContext.IsCustomErrorEnabled)
                     {
-                        service.Telemetry.TrackException(filterContext.Exception);
+                        provider.Telemetry.TrackException(filterContext.Exception);
                     }
                 }
 
@@ -41,7 +42,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             }
             finally
             {
-                service = null;
+                provider = null;
             }
         }
     }

@@ -1,5 +1,5 @@
 ﻿// -----------------------------------------------------------------------
-// <copyright file="Communication.cs" company="Microsoft">
+// <copyright file="HttpService.cs" company="Microsoft">
 //     Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
 // -----------------------------------------------------------------------
@@ -9,19 +9,21 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
     using System.Net.Http;
     using System.Net.Http.Headers;
     using System.Threading.Tasks;
+    using Rest;
 
     /// <summary>
     /// Provides the ability to perform HTTP operations.
     /// </summary>
-    public class Communication : ICommunication
+    public class HttpService : IHttpService
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="Communication"/> class.
+        /// Static instance of the <see cref="HttpClient" /> class.
         /// </summary>
-        /// <param name="service">Provides access to the core services.</param>
-        public Communication(IExplorerService service)
-        {
-        }
+        private static HttpClient client = new HttpClient(
+            new RetryDelegatingHandler
+            {
+                InnerHandler = new HttpClientHandler()
+            });
 
         /// <summary>
         /// Sends a GET request to the specified Uri as an asynchronous operation.

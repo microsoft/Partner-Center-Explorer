@@ -14,6 +14,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     using Logic;
     using Models;
     using PartnerCenter.Models.Offers;
+    using Providers;
 
     /// <summary>
     /// Processes offer related operations.
@@ -25,7 +26,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// Initializes a new instance of the <see cref="OfferController"/> class.
         /// </summary>
         /// <param name="service">Provides access to core services.</param>
-        public OfferController(IExplorerService service) : base(service)
+        public OfferController(IExplorerProvider provider) : base(provider)
         {
         }
 
@@ -43,7 +44,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                offers = await Service.PartnerOperations.GetOffersAsync().ConfigureAwait(false);
+                offers = await Provider.PartnerOperations.GetOffersAsync().ConfigureAwait(false);
 
                 offersModel = new OffersModel
                 {
@@ -90,7 +91,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                offers = await Service.PartnerOperations.GetOffersAsync().ConfigureAwait(false);
+                offers = await Provider.PartnerOperations.GetOffersAsync().ConfigureAwait(false);
 
                 return Json(
                     offers.Single(x => x.Id.Equals(offerId, StringComparison.CurrentCultureIgnoreCase)), 

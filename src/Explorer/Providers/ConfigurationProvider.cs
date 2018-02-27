@@ -1,10 +1,10 @@
 ﻿// -----------------------------------------------------------------------
-// <copyright file="Configuration.cs" company="Microsoft">
+// <copyright file="ConfigurationProvider.cs" company="Microsoft">
 //     Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
+namespace Microsoft.Store.PartnerCenter.Explorer.Providers
 {
     using System;
     using System.Configuration;
@@ -15,22 +15,22 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
     /// <summary>
     /// Provides easy access to various configurations stored in sources like app.config and web.config
     /// </summary>
-    /// <seealso cref="IConfiguration" />
-    public class Configuration : IConfiguration
+    /// <seealso cref="IConfigurationProvider" />
+    public class ConfigurationProvider : IConfigurationProvider
     {
         /// <summary>
-        /// Provides access to core services.
+        /// Provides access to core explorer providers.
         /// </summary>
-        private readonly IExplorerService service;
+        private readonly IExplorerProvider service;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Configuration"/> class.
+        /// Initializes a new instance of the <see cref="ConfigurationProvider"/> class.
         /// </summary>
-        /// <param name="service">Provides access to core services.</param>
+        /// <param name="service">Provides access to core explorer providers.</param>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="service"/> is null.
         /// </exception>
-        public Configuration(IExplorerService service)
+        public ConfigurationProvider(IExplorerProvider service)
         {
             service.AssertNotNull(nameof(service));
             this.service = service;

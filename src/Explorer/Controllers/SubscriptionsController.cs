@@ -18,6 +18,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     using PartnerCenter.Models.Invoices;
     using PartnerCenter.Models.Orders;
     using PartnerCenter.Models.Subscriptions;
+    using Providers;
     using Security;
 
     /// <summary>
@@ -30,7 +31,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// Initializes a new instance of the <see cref="SubscriptionsController"/> class.
         /// </summary>
         /// <param name="service">Provides access to core services.</param>
-        public SubscriptionsController(IExplorerService service) : base(service)
+        public SubscriptionsController(IExplorerProvider provider) : base(provider)
         {
         }
 
@@ -74,7 +75,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                     ReferenceCustomerId = model.CustomerId
                 };
 
-                newOrder = await Service.PartnerOperations.CreateOrderAsync(model.CustomerId, newOrder).ConfigureAwait(false);
+                newOrder = await Provider.PartnerOperations.CreateOrderAsync(model.CustomerId, newOrder).ConfigureAwait(false);
                 subscriptionsModel = await GetSubscriptionsAsync(model.CustomerId).ConfigureAwait(false);
 
                 return PartialView("List", subscriptionsModel);
@@ -97,13 +98,13 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                subscription = await Service.PartnerOperations.GetSubscriptionAsync(model.CustomerId, model.Id).ConfigureAwait(false);
+                subscription = await Provider.PartnerOperations.GetSubscriptionAsync(model.CustomerId, model.Id).ConfigureAwait(false);
 
                 subscription.FriendlyName = model.FriendlyName;
                 subscription.Status = model.Status;
                 subscription.Quantity = model.Quantity;
 
-                await Service.PartnerOperations.UpdateSubscriptionAsync(model.CustomerId, subscription).ConfigureAwait(false);
+                await Provider.PartnerOperations.UpdateSubscriptionAsync(model.CustomerId, subscription).ConfigureAwait(false);
 
                 return new HttpResponseMessage(HttpStatusCode.OK);
             }
@@ -160,8 +161,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                customer = await Service.PartnerOperations.GetCustomerAsync(customerId).ConfigureAwait(false);
-                subscription = await Service.PartnerOperations.GetSubscriptionAsync(customerId, subscriptionId).ConfigureAwait(false);
+                customer = await Provider.PartnerOperations.GetCustomerAsync(customerId).ConfigureAwait(false);
+                subscription = await Provider.PartnerOperations.GetSubscriptionAsync(customerId, subscriptionId).ConfigureAwait(false);
 
                 model = new SubscriptionModel()
                 {
@@ -211,7 +212,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                subscriptions = await Service.PartnerOperations.GetSubscriptionsAsync(customerId).ConfigureAwait(false);
+                subscriptions = await Provider.PartnerOperations.GetSubscriptionsAsync(customerId).ConfigureAwait(false);
                 subscriptionsModel = new SubscriptionsModel()
                 {
                     Subscriptions = new List<SubscriptionModel>()

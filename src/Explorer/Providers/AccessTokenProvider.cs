@@ -4,7 +4,7 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace Microsoft.Store.PartnerCenter.Explorer.Security
+namespace Microsoft.Store.PartnerCenter.Explorer.Providers
 {
     using System.Linq;
     using System.Security.Claims;
@@ -20,9 +20,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
     internal sealed class AccessTokenProvider : IAccessTokenProvider
     {
         /// <summary>
-        /// Provides access to the application core services.
+        /// Provides access to the core explorer providers.
         /// </summary>
-        private readonly IExplorerService service;
+        private readonly IExplorerProvider provider;
 
         /// <summary>
         /// Type of the assertion representing the user when performing app + user authentication.
@@ -32,37 +32,20 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
         /// <summary>
         /// Initializes a new instance of <see cref="AccessTokenProvider"/> class.
         /// </summary>
-        /// <param name="service">Provides access to the application core services.</param>
+        /// <param name="provider">Provides access to core explorer providers.</param>
         /// <exception cref="System.ArgumentNullException">
-        /// <paramref name="service"/> is null.
+        /// <paramref name="provider"/> is null.
         /// </exception>
-        public AccessTokenProvider(IExplorerService service)
+        public AccessTokenProvider(IExplorerProvider provider)
         {
-            service.AssertNotNull(nameof(service));
-            this.service = service;
+            provider.AssertNotNull(nameof(provider));
+            this.provider = provider;
         }
 
         /// <summary>
         /// Get the user assertion token for the authenticated user.
         /// </summary>
-        public string UserAssertionToken
-        {
-            get
-            {
-                System.IdentityModel.Tokens.BootstrapContext bootstrapContext;
-
-                try
-                {
-                    bootstrapContext = ClaimsPrincipal.Current.Identities.First().BootstrapContext as System.IdentityModel.Tokens.BootstrapContext;
-
-                    return bootstrapContext?.Token;
-                }
-                finally
-                {
-                    bootstrapContext = null;
-                }
-            }
-        }
+        public string UserAssertionToken => ClaimsPrincipal.Current.Identities.First().BootstrapContext.ToString();
 
         /// <summary>
         /// Gets an access token from the authority.
@@ -94,7 +77,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
             {
                 if (credential.UseCache)
                 {
-                    tokenCache = new DistributedTokenCache(service, resource, $"AppOnly::{authority}::{resource}");
+                    tokenCache = new DistributedTokenCache(provider, resource, $"AppOnly::{authority}::{resource}");
                     authContext = new AuthenticationContext(authority, tokenCache);
                 }
                 else
@@ -155,7 +138,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
             {
                 if (credential.UseCache)
                 {
-                    tokenCache = new DistributedTokenCache(service, resource);
+                    tokenCache = new DistributedTokenCache(provider, resource);
                     authContext = new AuthenticationContext(authority, tokenCache);
                 }
                 else

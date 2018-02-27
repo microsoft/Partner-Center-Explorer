@@ -1,10 +1,10 @@
 ﻿// -----------------------------------------------------------------------
-// <copyright file="IVaultService.cs" company="Microsoft">
+// <copyright file="IVaultProvider.cs" company="Microsoft">
 //     Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace Microsoft.Store.PartnerCenter.Explorer.Security
+namespace Microsoft.Store.PartnerCenter.Explorer.Providers
 {
     using System.Security;
     using System.Threading.Tasks;
@@ -12,7 +12,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
     /// <summary>
     /// Represents a secure mechanism for retrieving and store information. 
     /// </summary>
-    public interface IVaultService
+    public interface IVaultProvider
     {
         /// <summary>
         /// Gets the specified entity from the vault. 

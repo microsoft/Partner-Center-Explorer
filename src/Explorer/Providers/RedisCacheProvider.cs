@@ -1,30 +1,30 @@
 ﻿// -----------------------------------------------------------------------
-// <copyright file="CacheService.cs" company="Microsoft">
+// <copyright file="RedisCacheProvider.cs" company="Microsoft">
 //     Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace Microsoft.Store.PartnerCenter.Explorer.Cache
+namespace Microsoft.Store.PartnerCenter.Explorer.Providers
 {
     using System;
     using System.IO;
     using System.IO.Compression;
-    using System.Security;
     using System.Text;
     using System.Threading.Tasks;
+    using Cache;
     using Logic;
     using Newtonsoft.Json;
     using StackExchange.Redis;
 
     /// <summary>
-    /// Provides quick access to frequently utilized resources.
+    /// Provides the ability to cache resources using an instance of Redis Cache.
     /// </summary>
-    public class CacheService : ICacheService
+    internal sealed class RedisCacheProvider : ICacheProvider
     {
         /// <summary>
-        /// Provides access to core services.
+        /// Provides access to core report providers.
         /// </summary>
-        private IExplorerService service;
+        private readonly IExplorerProvider provider;
 
         /// <summary>
         /// Provides the ability to interact with an instance of Redis Cache.
@@ -34,14 +34,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         /// <summary>
         /// Initializes a new instance of the <see cref="RedisCacheProvider"/> class.
         /// </summary>
-        /// <param name="service">Provides access to core services.</param>
+        /// <param name="provider">Provides access to core report providers.</param>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="service"/> is null.
+        /// <paramref name="provider"/> is null.
         /// </exception>
-        public CacheService(IExplorerService service)
+        public RedisCacheProvider(IExplorerProvider provider)
         {
-            service.AssertNotNull(nameof(service));
-            this.service = service;
+            provider.AssertNotNull(nameof(provider));
+            this.provider = provider;
         }
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         public async Task DeleteAsync(CacheDatabaseType database, string key = null)
         {
             IDatabase cache = await GetCacheReferenceAsync(database);
-            await cache.KeyDeleteAsync(key).ConfigureAwait(false);
+            await cache.KeyDeleteAsync(key);
         }
 
         /// <summary>
@@ -107,8 +107,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         {
             key.AssertNotEmpty(nameof(key));
 
-            IDatabase cache = await GetCacheReferenceAsync(database).ConfigureAwait(false);
-            RedisValue value = await cache.StringGetAsync(key).ConfigureAwait(false);
+            IDatabase cache = await GetCacheReferenceAsync(database);
+            RedisValue value = await cache.StringGetAsync(key);
 
             return value.HasValue ? DecompressEntity<TEntity>(value) : null;
         }
@@ -134,12 +134,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
             key.AssertNotEmpty(nameof(key));
             entity.AssertNotNull(nameof(entity));
 
-            IDatabase cache = await GetCacheReferenceAsync(database).ConfigureAwait(false);
+            IDatabase cache = await GetCacheReferenceAsync(database);
 
             await cache.StringSetAsync(
-                key, 
-                CompressEntity(entity), 
-                expiration).ConfigureAwait(false);
+                key, CompressEntity(entity), expiration);
         }
 
         /// <summary>
@@ -272,11 +270,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         {
             if (connection == null)
             {
-                using (SecureString redisCacheConnectionString = SynchronousExecute(() => service.Vault.GetAsync("RedisCacheConnectionString")))
-                {
-                    connection = ConnectionMultiplexer.Connect(
-                        redisCacheConnectionString.ToUnsecureString());
-                }
+                connection = ConnectionMultiplexer.Connect(
+                    provider.Configuration.RedisCacheConnectionString.ToUnsecureString());
             }
 
             return connection.GetDatabase((int)database);
@@ -291,11 +286,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         {
             if (connection == null)
             {
-                using (SecureString redisCacheConnectionString = await service.Vault.GetAsync("RedisCacheConnectionString"))
-                {
-                    connection = await ConnectionMultiplexer.ConnectAsync(
-                        redisCacheConnectionString.ToUnsecureString()).ConfigureAwait(false);
-                }
+                connection = await ConnectionMultiplexer.ConnectAsync(
+                    provider.Configuration.RedisCacheConnectionString.ToUnsecureString());
             }
 
             return connection.GetDatabase((int)database);

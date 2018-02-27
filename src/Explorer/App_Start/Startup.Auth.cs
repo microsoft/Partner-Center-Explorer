@@ -8,16 +8,17 @@ namespace Microsoft.Store.PartnerCenter.Explorer
 {
     using System;
     using System.Collections.Generic;
-    using System.IdentityModel.Tokens;
     using System.Threading.Tasks;
-    using Logic;
-    using Models;
     using global::Owin;
+    using Logic;
+    using IdentityModel.Tokens;
+    using Models;
     using Owin.Security;
     using Owin.Security.Cookies;
     using Owin.Security.OpenIdConnect;
     using PartnerCenter.Exceptions;
     using PartnerCenter.Models.Customers;
+    using Providers;
     using Unity;
 
     /// <summary>
@@ -31,7 +32,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
         /// <param name="app">The application to be configured.</param>
         public void ConfigureAuth(IAppBuilder app)
         {
-            IExplorerService service = UnityConfig.Container.Resolve<IExplorerService>();
+            IExplorerProvider provider = UnityConfig.Container.Resolve<IExplorerProvider>();
 
             app.SetDefaultSignInAsAuthenticationType(CookieAuthenticationDefaults.AuthenticationType);
 
@@ -40,15 +41,15 @@ namespace Microsoft.Store.PartnerCenter.Explorer
             app.UseOpenIdConnectAuthentication(
                 new OpenIdConnectAuthenticationOptions
                 {
-                    ClientId = service.Configuration.ApplicationId,
-                    Authority = $"{service.Configuration.ActiveDirectoryEndpoint}/common",
+                    ClientId = provider.Configuration.ApplicationId,
+                    Authority = $"{provider.Configuration.ActiveDirectoryEndpoint}/common",
 
                     Notifications = new OpenIdConnectAuthenticationNotifications
                     {
                         AuthenticationFailed = (context) =>
                         {
                             // Track the exceptions using the telemetry provider.
-                            service.Telemetry.TrackException(context.Exception);
+                            provider.Telemetry.TrackException(context.Exception);
 
                             // Pass in the context back to the app
                             context.OwinContext.Response.Redirect("/Home/Error");
@@ -63,7 +64,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
                             string userTenantId = context.AuthenticationTicket.Identity.FindFirst("http://schemas.microsoft.com/identity/claims/tenantid").Value;
                             string signedInUserObjectId = context.AuthenticationTicket.Identity.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
 
-                            IGraphClient client = new GraphClient(service, userTenantId);
+                            IGraphClient client = new GraphClient(provider, userTenantId);
 
                             List<RoleModel> roles = await client.GetDirectoryRolesAsync(signedInUserObjectId).ConfigureAwait(false);
 
@@ -73,7 +74,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
                             }
 
                             bool isPartnerUser = userTenantId.Equals(
-                                service.Configuration.ApplicationTenantId, StringComparison.CurrentCultureIgnoreCase);
+                                provider.Configuration.ApplicationTenantId, StringComparison.CurrentCultureIgnoreCase);
 
                             string customerId = string.Empty;
 
@@ -81,7 +82,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
                             {
                                 try
                                 {
-                                    Customer c = await service.PartnerOperations.GetCustomerAsync(userTenantId).ConfigureAwait(false);
+                                    Customer c = await provider.PartnerOperations.GetCustomerAsync(userTenantId).ConfigureAwait(false);
                                     customerId = c.Id;
                                 }
                                 catch (PartnerException ex)

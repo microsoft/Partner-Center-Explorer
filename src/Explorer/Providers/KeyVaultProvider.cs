@@ -1,10 +1,10 @@
 ﻿// -----------------------------------------------------------------------
-// <copyright file="VaultService.cs" company="Microsoft">
+// <copyright file="KeyVaultProvider.cs" company="Microsoft">
 //     Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace Microsoft.Store.PartnerCenter.Explorer.Security
+namespace Microsoft.Store.PartnerCenter.Explorer.Providers
 {
     using System;
     using System.Collections.Generic;
@@ -18,12 +18,12 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
     /// <summary>
     /// Provides a secure mechanism for retrieving and store information. 
     /// </summary>
-    internal sealed class VaultService : IVaultService
+    internal sealed class KeyVaultProvider : IVaultProvider
     {
         /// <summary>
-        /// Provides access to the application core services.
+        /// Provides access to core explorer providers.
         /// </summary>
-        private readonly IExplorerService service;
+        private readonly IExplorerProvider provider;
 
         /// <summary>
         /// Error code returned when a secret is not found in the vault.
@@ -31,16 +31,16 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
         private const string NotFoundErrorCode = "SecretNotFound";
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="VaultService"/> class.
+        /// Initializes a new instance of the <see cref="KeyVaultProvider"/> class.
         /// </summary>
-        /// <param name="provider">Provides access to the application core services.</param>
+        /// <param name="provider">Provides access to core explorer providers.</param>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="provider"/> is null.
         /// </exception>
-        public VaultService(IExplorerService service)
+        public KeyVaultProvider(IExplorerProvider provider)
         {
-            service.AssertNotNull(nameof(service));
-            this.service = service;
+            provider.AssertNotNull(nameof(provider));
+            this.provider = provider;
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
                 {
                     try
                     {
-                        bundle = await client.GetSecretAsync(service.Configuration.KeyVaultEndpoint, identifier).ConfigureAwait(false);
+                        bundle = await client.GetSecretAsync(provider.Configuration.KeyVaultEndpoint, identifier).ConfigureAwait(false);
                     }
                     catch (KeyVaultErrorException ex)
                     {
@@ -83,17 +83,19 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
                     }
                 }
 
+                // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
                 {
                     { "ElapsedMilliseconds", DateTime.Now.Subtract(executionTime).TotalMilliseconds }
                 };
 
+                // Capture the request for the customer summary for analysis.
                 eventProperties = new Dictionary<string, string>
                 {
                     { "Identifier", identifier }
                 };
 
-                service.Telemetry.TrackEvent("KeyVault/GetAsync", eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent("KeyVault/GetAsync", eventProperties, eventMetrics);
 
                 return bundle?.Value.ToSecureString();
             }
@@ -133,9 +135,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
                 using (IKeyVaultClient client = GetAzureKeyVaultClient())
                 {
                     await client.SetSecretAsync(
-                        service.Configuration.KeyVaultEndpoint, identifier, value.ToUnsecureString()).ConfigureAwait(false);
+                        provider.Configuration.KeyVaultEndpoint, identifier, value.ToUnsecureString()).ConfigureAwait(false);
                 }
 
+                // Track the event measurements for analysis.
                 eventMetrics = new Dictionary<string, double>
                 {
                     { "ElapsedMilliseconds", DateTime.Now.Subtract(executionTime).TotalMilliseconds }
@@ -147,7 +150,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
                     { "Identifier", identifier }
                 };
 
-                service.Telemetry.TrackEvent("KeyVault/StoreAsync", eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent("KeyVault/StoreAsync", eventProperties, eventMetrics);
             }
             finally
             {

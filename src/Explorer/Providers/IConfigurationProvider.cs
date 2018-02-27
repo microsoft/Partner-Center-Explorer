@@ -1,10 +1,10 @@
 ﻿// -----------------------------------------------------------------------
-// <copyright file="IConfiguration.cs" company="Microsoft">
+// <copyright file="IConfigurationProvider.cs" company="Microsoft">
 //     Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
+namespace Microsoft.Store.PartnerCenter.Explorer.Providers
 {
     using System.Security;
     using System.Threading.Tasks;
@@ -12,7 +12,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Configuration
     /// <summary>
     /// Represents the ability to reference various configurations. 
     /// </summary>
-    public interface IConfiguration
+    public interface IConfigurationProvider
     {
         /// <summary>
         /// Gets the Active Directory endpoint address.

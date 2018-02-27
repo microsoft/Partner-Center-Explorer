@@ -16,6 +16,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     using Models;
     using PartnerCenter.Models;
     using PartnerCenter.Models.Customers;
+    using Providers;
     using Security;
 
     /// <summary>
@@ -28,7 +29,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// Initializes a new instance of the <see cref="CustomersController"/> class.
         /// </summary>
         /// <param name="service">Provides access to core services.</param>
-        public CustomersController(IExplorerService service) : base(service)
+        public CustomersController(IExplorerProvider provider) : base(provider)
         {
         }
 
@@ -45,9 +46,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         {
             customerId.AssertNotEmpty(nameof(customerId));
 
-            if (Service.Configuration.IsIntegrationSandbox)
+            if (Provider.Configuration.IsIntegrationSandbox)
             {
-                await Service.PartnerOperations.DeleteCustomerAsync(customerId).ConfigureAwait(false);
+                await Provider.PartnerOperations.DeleteCustomerAsync(customerId).ConfigureAwait(false);
             }
 
             return new HttpResponseMessage(HttpStatusCode.NoContent);
@@ -106,7 +107,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                     }
                 };
 
-                entity = await Service.PartnerOperations.CreateCustomerAsync(entity).ConfigureAwait(false);
+                entity = await Provider.PartnerOperations.CreateCustomerAsync(entity).ConfigureAwait(false);
 
                 createdCustomerModel = new CreatedCustomerModel()
                 {
@@ -132,7 +133,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
             CustomersModel customersModel = new CustomersModel()
             {
                 Customers = await GetCustomerModelsAsync().ConfigureAwait(false),
-                IsSandboxEnvironment = Service.Configuration.IsIntegrationSandbox
+                IsSandboxEnvironment = Provider.Configuration.IsIntegrationSandbox
             };
 
             return PartialView(customersModel);
@@ -164,7 +165,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                customer = await Service.PartnerOperations.GetCustomerAsync(customerId).ConfigureAwait(false);
+                customer = await Provider.PartnerOperations.GetCustomerAsync(customerId).ConfigureAwait(false);
 
                 customerModel = new CustomerModel()
                 {
@@ -194,7 +195,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                customers = await Service.PartnerOperations.GetCustomersAsync().ConfigureAwait(false);
+                customers = await Provider.PartnerOperations.GetCustomersAsync().ConfigureAwait(false);
 
                 return customers.Select(item => new CustomerModel
                 {

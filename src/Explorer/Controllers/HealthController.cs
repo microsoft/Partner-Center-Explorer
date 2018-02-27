@@ -6,18 +6,17 @@
 
 namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 {
-    using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using System.Web.Mvc;
     using Logic;
-    using Logic.Azure;
     using Logic.Office;
     using Microsoft.IdentityModel.Clients.ActiveDirectory;
     using Models;
     using PartnerCenter.Models.Customers;
     using PartnerCenter.Models.Invoices;
     using PartnerCenter.Models.Subscriptions;
+    using Providers;
     using Security;
 
     /// <summary>
@@ -30,7 +29,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// Initializes a new instance of the <see cref="HealthController"/> class.
         /// </summary>
         /// <param name="service">Provides access to core services.</param>
-        public HealthController(IExplorerService service) : base(service)
+        public HealthController(IExplorerProvider provider) : base(provider)
         {
         }
 
@@ -56,8 +55,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                customer = await Service.PartnerOperations.GetCustomerAsync(customerId).ConfigureAwait(false);
-                subscription = await Service.PartnerOperations.GetSubscriptionAsync(customerId, subscriptionId).ConfigureAwait(false);
+                customer = await Provider.PartnerOperations.GetCustomerAsync(customerId).ConfigureAwait(false);
+                subscription = await Provider.PartnerOperations.GetSubscriptionAsync(customerId, subscriptionId).ConfigureAwait(false);
 
                 healthModel = new SubscriptionHealthModel
                 {
@@ -106,21 +105,25 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                token = await Service.AccessToken.GetAccessTokenAsync(
-                    $"{Service.Configuration.ActiveDirectoryEndpoint}/{customerId}",
-                      Service.Configuration.AzureResourceManagerEndpoint,
+                token = await Provider.AccessToken.GetAccessTokenAsync(
+                    $"{Provider.Configuration.ActiveDirectoryEndpoint}/{customerId}",
+                      Provider.Configuration.AzureResourceManagerEndpoint,
                     new ApplicationCredential
                     {
-                        ApplicationId = Service.Configuration.ApplicationId,
-                        ApplicationSecret = Service.Configuration.ApplicationSecret,
+                        ApplicationId = Provider.Configuration.ApplicationId,
+                        ApplicationSecret = Provider.Configuration.ApplicationSecret,
                         UseCache = true
                     },
-                    Service.AccessToken.UserAssertionToken).ConfigureAwait(false);
+                    Provider.AccessToken.UserAssertionToken).ConfigureAwait(false);
 
-                using (Insights insights = new Insights(subscriptionId, token.AccessToken))
-                {
-                    return await insights.GetHealthEventsAsync().ConfigureAwait(false);
-                }
+                // TODO -- Create a custom HttpService to query Azure health events.
+
+                //using (Insights insights = new Insights(subscriptionId, token.AccessToken))
+                //{
+                //    return await insights.GetHealthEventsAsync().ConfigureAwait(false);
+                //}
+
+                return null;
             }
             finally
             {
@@ -142,17 +145,17 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                token = await Service.AccessToken.GetAccessTokenAsync(
-                    $"{Service.Configuration.ActiveDirectoryEndpoint}/{customerId}",
-                      Service.Configuration.OfficeManagementEndpoint,
+                token = await Provider.AccessToken.GetAccessTokenAsync(
+                    $"{Provider.Configuration.ActiveDirectoryEndpoint}/{customerId}",
+                      Provider.Configuration.OfficeManagementEndpoint,
                     new ApplicationCredential
                     {
-                        ApplicationId = Service.Configuration.ApplicationId,
-                        ApplicationSecret = Service.Configuration.ApplicationSecret,
+                        ApplicationId = Provider.Configuration.ApplicationId,
+                        ApplicationSecret = Provider.Configuration.ApplicationSecret,
                         UseCache = true
                     }).ConfigureAwait(false);
 
-                comm = new ServiceCommunications(Service, token);
+                comm = new ServiceCommunications(Provider, token);
                 return await comm.GetCurrentStatusAsync(customerId).ConfigureAwait(false);
             }
             finally

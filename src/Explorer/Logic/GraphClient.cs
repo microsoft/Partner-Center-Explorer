@@ -10,10 +10,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using Microsoft.Azure.ActiveDirectory.GraphClient;
-    using Microsoft.Azure.ActiveDirectory.GraphClient.Extensions;
-    using Microsoft.IdentityModel.Clients.ActiveDirectory;
+    using Graph;
     using Models;
+    using Providers;
+    using Security;
 
     /// <summary>
     /// Provides the ability to interact with the Microsoft Graph.
@@ -24,12 +24,12 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// <summary>
         /// Provides access to core services.
         /// </summary>
-        private readonly IExplorerService service;
+        private readonly IExplorerProvider provider;
 
         /// <summary>
-        /// Provides access to the Microsoft Azure AD Graph API.
+        /// Provides access to the Microsoft Graph.
         /// </summary>
-        private readonly IActiveDirectoryClient client;
+        private readonly IGraphServiceClient client;
 
         /// <summary>
         /// Identifier of the customer.
@@ -39,56 +39,41 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// <summary>
         /// Initializes a new instance of the <see cref="GraphClient"/> class.
         /// </summary>
-        /// <param name="service">Provides access to core services.</param>
+        /// <param name="provider">Provides access to core services.</param>
         /// <param name="customerId">Identifier for customer whose resources are being accessed.</param>
         /// <exception cref="ArgumentException">
         /// <paramref name="customerId"/> is empty or null.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="service"/> is null.
+        /// <paramref name="provider"/> is null.
         /// </exception>
-        public GraphClient(IExplorerService service, string customerId)
+        public GraphClient(IExplorerProvider provider, string customerId)
         {
-            service.AssertNotNull(nameof(service));
+            provider.AssertNotNull(nameof(provider));
             customerId.AssertNotEmpty(nameof(customerId));
 
             this.customerId = customerId;
-            this.service = service;
+            this.provider = provider;
 
-            client = new ActiveDirectoryClient(
-                new Uri($"{this.service.Configuration.GraphEndpoint}/{customerId}"),
-                async () =>
-                {
-                    AuthenticationResult token = await service.AccessToken.GetAccessTokenAsync(
-                        $"{this.service.Configuration.ActiveDirectoryEndpoint}/{customerId}",
-                        service.Configuration.GraphEndpoint,
-                        new ApplicationCredential
-                        {
-                            ApplicationId = service.Configuration.ApplicationId,
-                            ApplicationSecret = service.Configuration.ApplicationSecret,
-                            UseCache = true
-                        }).ConfigureAwait(false);
-
-                    return token.AccessToken;
-                });
+            client = new GraphServiceClient(new AuthenticationProvider(this.provider, customerId));
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GraphClient"/> class.
         /// </summary>
-        /// <param name="service">Provides access to core services.</param>
-        /// <param name="client">Provides the ability to interact with the Microsoft AD Graph API.</param>
+        /// <param name="provider">Provides access to core services.</param>
+        /// <param name="client">Provides the ability to interact with the Microsoft Graph.</param>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="service"/> is null.
+        /// <paramref name="provider"/> is null.
         /// or
         /// <paramref name="client"/> is null.
         /// </exception>
-        public GraphClient(IExplorerService service, IActiveDirectoryClient client)
+        public GraphClient(IExplorerProvider provider, IGraphServiceClient client)
         {
-            service.AssertNotNull(nameof(service));
+            provider.AssertNotNull(nameof(provider));
             client.AssertNotNull(nameof(client));
 
-            this.service = service;
+            this.provider = provider;
             this.client = client;
         }
 
@@ -102,21 +87,27 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// </exception>
         public async Task<List<RoleModel>> GetDirectoryRolesAsync(string objectId)
         {
-            IPagedCollection<IDirectoryObject> memberships;
-            List<Group> groups;
-            List<DirectoryRole> directoryRoles;
+            DateTime executionTime;
+            Dictionary<string, double> eventMeasurements;
+            Dictionary<string, string> eventProperties;
+            IUserMemberOfCollectionWithReferencesPage directoryGroups;
             List<RoleModel> roles;
+            List<DirectoryRole> directoryRoles;
+            List<Group> groups;
+            bool morePages;
 
             objectId.AssertNotEmpty(nameof(objectId));
 
             try
             {
-                memberships = await client.Users.GetByObjectId(objectId).MemberOf.ExecuteAsync().ConfigureAwait(false);
+                executionTime = DateTime.Now;
+
+                directoryGroups = await client.Users[objectId].MemberOf.Request().GetAsync().ConfigureAwait(false);
                 roles = new List<RoleModel>();
 
                 do
                 {
-                    directoryRoles = memberships.CurrentPage.OfType<DirectoryRole>().ToList();
+                    directoryRoles = directoryGroups.CurrentPage.OfType<DirectoryRole>().ToList();
 
                     if (directoryRoles.Count > 0)
                     {
@@ -127,30 +118,80 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                         }));
                     }
 
-                    if (customerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                    if (customerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
                     {
-                        groups = memberships.CurrentPage.OfType<Group>().Where(
-                            g => g.DisplayName.Equals("AdminAgents") || g.DisplayName.Equals("HelpdeskAgents")).ToList();
+                        groups = directoryGroups.CurrentPage.OfType<Group>().Where(
+                            g => g.DisplayName.Equals("AdminAgents") || g.DisplayName.Equals("HelpdeskAgents") || g.DisplayName.Equals("SalesAgent")).ToList();
 
                         if (groups.Count > 0)
                         {
                             roles.AddRange(groups.Select(g => new RoleModel
                             {
+                                Description = g.Description,
                                 DisplayName = g.DisplayName
                             }));
                         }
                     }
 
-                    memberships = await memberships.GetNextPageAsync().ConfigureAwait(false);
+                    morePages = directoryGroups.NextPageRequest != null;
+
+                    if (morePages)
+                    {
+                        directoryGroups = await directoryGroups.NextPageRequest.GetAsync().ConfigureAwait(false);
+                    }
                 }
-                while (memberships != null);
+                while (morePages);
+
+                // Capture the request for the customer summary for analysis.
+                eventProperties = new Dictionary<string, string>
+                {
+                    { "CustomerId", customerId },
+                    { "ObjectId", objectId }
+                };
+
+                // Track the event measurements for analysis.
+                eventMeasurements = new Dictionary<string, double>
+                {
+                    { "ElapsedMilliseconds", DateTime.Now.Subtract(executionTime).TotalMilliseconds },
+                    { "NumberOfRoles", roles.Count }
+                };
+
+                provider.Telemetry.TrackEvent(nameof(GetDirectoryRolesAsync), eventProperties, eventMeasurements);
 
                 return roles;
             }
+            catch (Exception ex)
+            {
+                provider.Telemetry.TrackException(ex);
+                return null;
+            }
             finally
             {
+                directoryGroups = null;
                 directoryRoles = null;
-                memberships = null;
+                eventMeasurements = null;
+                eventProperties = null;
+                groups = null;
+            }
+        }
+
+        /// <summary>
+        /// Gets the service configuration records for the specified domain. 
+        /// </summary>
+        /// <param name="domain">Name of the domain</param>
+        /// <returns>A list of service configuration records for the specified domain.</returns>
+        public async Task<List<DomainDnsRecord>> GetDomainConfigurationRecordsAsync(string domain)
+        {
+            IDomainServiceConfigurationRecordsCollectionPage records;
+
+            try
+            {
+                records = await client.Domains[domain].ServiceConfigurationRecords.Request().GetAsync().ConfigureAwait(false);
+                return records.CurrentPage.ToList();
+            }
+            finally
+            {
+                records = null;
             }
         }
 
@@ -160,33 +201,38 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// <returns>A list of domains configured for the customer.</returns>
         public async Task<List<DomainModel>> GetDomainsAsync()
         {
-            IPagedCollection<IDomain> domains;
+            IGraphServiceDomainsCollectionPage domains;
             List<DomainModel> models;
+            bool morePages;
 
             try
             {
-                domains = await client.Domains.ExecuteAsync().ConfigureAwait(false);
+                domains = await client.Domains.Request().GetAsync().ConfigureAwait(false);
                 models = new List<DomainModel>();
 
                 do
                 {
                     models.AddRange(domains.CurrentPage.Select(d => new DomainModel
                     {
-                        AdminManaged = d.IsAdminManaged,
+                        AdminManaged = d.IsAdminManaged.Value,
                         AuthenticationType = d.AuthenticationType,
                         AvailabilityStatus = d.AvailabilityStatus,
-                        IsDefault = d.IsDefault,
-                        IsInitial = d.IsInitial,
-                        IsRoot = d.IsRoot,
-                        IsVerified = d.IsVerified,
-                        Name = d.Name,
-                        ServiceConfigurationRecords = d.ServiceConfigurationRecords.CurrentPage.ToList(),
+                        IsDefault = d.IsDefault.Value,
+                        IsInitial = d.IsInitial.Value,
+                        IsRoot = d.IsRoot.Value,
+                        IsVerified = d.IsVerified.Value,
+                        Name = d.Id,
                         SupportedServices = d.SupportedServices
                     }));
 
-                    domains = await domains.GetNextPageAsync().ConfigureAwait(false);
+                    morePages = domains.NextPageRequest != null;
+
+                    if (morePages)
+                    {
+                        domains = await domains.NextPageRequest.GetAsync().ConfigureAwait(false);
+                    }
                 }
-                while (domains != null);
+                while (morePages);
 
                 return models;
             }
@@ -202,12 +248,13 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// <returns>A list of users that belong to the customer.</returns>
         public async Task<List<UserModel>> GetUsersAsync()
         {
-            IPagedCollection<IUser> users;
+            IGraphServiceUsersCollectionPage users;
             List<UserModel> value;
+            bool morePages;
 
             try
             {
-                users = await client.Users.ExecuteAsync().ConfigureAwait(false);
+                users = await client.Users.Request().GetAsync().ConfigureAwait(false);
                 value = new List<UserModel>();
 
                 do
@@ -217,15 +264,20 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                         CustomerId = customerId,
                         DisplayName = u.DisplayName,
                         FirstName = u.GivenName,
-                        Id = u.ObjectId,
+                        Id = u.Id,
                         LastName = u.Surname,
                         UsageLocation = u.UsageLocation,
                         UserPrincipalName = u.UserPrincipalName
                     }));
 
-                    users = await users.GetNextPageAsync().ConfigureAwait(false);
+                    morePages = users.NextPageRequest != null;
+
+                    if (morePages)
+                    {
+                        users = await users.NextPageRequest.GetAsync().ConfigureAwait(false);
+                    }
                 }
-                while (users != null);
+                while (morePages);
 
                 return value;
             }

@@ -11,21 +11,22 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
     using System.Security.Claims;
     using System.Threading.Tasks;
     using Cache;
-    using Microsoft.IdentityModel.Clients.ActiveDirectory;
-    using Microsoft.Store.PartnerCenter.Extensions;
-    using Microsoft.Store.PartnerCenter.Models.Auditing;
-    using Microsoft.Store.PartnerCenter.Models.Licenses;
-    using Microsoft.Store.PartnerCenter.Models.Query;
-    using Microsoft.Store.PartnerCenter.Models.ServiceRequests;
-    using Microsoft.Store.PartnerCenter.Models.Users;
+    using IdentityModel.Clients.ActiveDirectory;
     using PartnerCenter.Enumerators;
+    using PartnerCenter.Extensions;
     using PartnerCenter.Models;
+    using PartnerCenter.Models.Auditing;
     using PartnerCenter.Models.Customers;
     using PartnerCenter.Models.Invoices;
+    using PartnerCenter.Models.Licenses;
     using PartnerCenter.Models.Offers;
     using PartnerCenter.Models.Orders;
+    using PartnerCenter.Models.Query;
+    using PartnerCenter.Models.ServiceRequests;
     using PartnerCenter.Models.Subscriptions;
+    using PartnerCenter.Models.Users;
     using PartnerCenter.Models.Utilizations;
+    using Providers;
     using RequestContext;
     using Security;
 
@@ -57,7 +58,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// <summary>
         /// Provides access to core services.
         /// </summary>
-        private IExplorerService service;
+        private IExplorerProvider provider;
 
         /// <summary>
         /// Provides a way to ensure that <see cref="appOperations"/> is only being modified 
@@ -68,14 +69,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// <summary>
         /// Initializes a new instance of the <see cref="PartnerOperations"/> class.
         /// </summary>
-        /// <param name="service">Provides access to core services.</param>
+        /// <param name="provider">Provides access to core services.</param>
         /// <exception cref="ArgumentException">
-        /// <paramref name="service"/> is null.
+        /// <paramref name="provider"/> is null.
         /// </exception>
-        public PartnerOperations(IExplorerService service)
+        public PartnerOperations(IExplorerProvider provider)
         {
-            service.AssertNotNull(nameof(service));
-            this.service = service;
+            provider.AssertNotNull(nameof(provider));
+            this.provider = provider;
         }
 
         /// <summary>
@@ -122,7 +123,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(CheckDomainAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(CheckDomainAsync), eventProperties, eventMetrics);
 
                 return exists;
             }
@@ -163,7 +164,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (!principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                if (!principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
                 {
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
@@ -184,7 +185,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(CreateCustomerAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(CreateCustomerAsync), eventProperties, eventMetrics);
 
                 return newEntity;
             }
@@ -224,7 +225,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
                 {
                     newEntity = await operations.Customers.ById(customerId).Orders.CreateAsync(newOrder);
                 }
@@ -247,7 +248,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(CreateOrderAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(CreateOrderAsync), eventProperties, eventMetrics);
 
                 return newEntity;
             }
@@ -296,7 +297,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
                 {
                     user = await operations.Customers.ById(customerId).Users.CreateAsync(newEntity).ConfigureAwait(false);
                 }
@@ -317,7 +318,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(CreateUserAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(CreateUserAsync), eventProperties, eventMetrics);
 
                 return user;
             }
@@ -358,7 +359,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (!principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                if (!principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
                 {
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
@@ -377,7 +378,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(DeleteCustomerAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(DeleteCustomerAsync), eventProperties, eventMetrics);
             }
             finally
             {
@@ -422,7 +423,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (!principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                if (!principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
                 {
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
@@ -443,7 +444,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(DeleteUserAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(DeleteUserAsync), eventProperties, eventMetrics);
             }
             finally
             {
@@ -496,7 +497,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(GetAuditRecordsAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(GetAuditRecordsAsync), eventProperties, eventMetrics);
 
                 return records;
             }
@@ -532,7 +533,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
                 {
                     customer = await operations.Customers.ById(customerId).GetAsync().ConfigureAwait(false);
                 }
@@ -553,7 +554,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(GetCustomerAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(GetCustomerAsync), eventProperties, eventMetrics);
 
                 return customer;
             }
@@ -593,7 +594,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 customers = new List<Customer>();
 
-                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
                 {
                     seekCustomers = await operations.Customers.GetAsync().ConfigureAwait(false);
                     customersEnumerator = operations.Enumerators.Customers.Create(seekCustomers);
@@ -623,7 +624,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(GetCustomersAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(GetCustomersAsync), eventProperties, eventMetrics);
 
                 return customers;
             }
@@ -666,7 +667,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId) ||
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId) ||
                     principal.CustomerId.Equals(customerId))
                 {
                     skus = await operations.Customers.ById(customerId).SubscribedSkus.GetAsync().ConfigureAwait(false);
@@ -688,7 +689,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(GetCustomerSubscribedSkusAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(GetCustomerSubscribedSkusAsync), eventProperties, eventMetrics);
 
                 return skus;
             }
@@ -730,7 +731,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (!principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                if (!principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
                 {
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
@@ -749,7 +750,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(GetInvoiceAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(GetInvoiceAsync), eventProperties, eventMetrics);
 
                 return invoice;
             }
@@ -792,7 +793,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (!principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                if (!principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
                 {
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
@@ -812,7 +813,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(GetInvoiceLineItemsAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(GetInvoiceLineItemsAsync), eventProperties, eventMetrics);
 
                 return new List<InvoiceLineItem>(invoiceLineItems.Items);
             }
@@ -848,7 +849,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (!principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                if (!principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
                 {
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
@@ -868,7 +869,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent("GetInvoicesAsync", eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent("GetInvoicesAsync", eventProperties, eventMetrics);
 
                 return new List<Invoice>(invoices.Items);
             }
@@ -904,12 +905,12 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                offers = await service.Cache.FetchAsync<ResourceCollection<Offer>>(CacheDatabaseType.DataStructures, OffersKey).ConfigureAwait(false);
+                offers = await provider.Cache.FetchAsync<ResourceCollection<Offer>>(CacheDatabaseType.DataStructures, OffersKey).ConfigureAwait(false);
 
                 if (offers == null)
                 {
                     offers = await operations.Offers.ByCountry("US").GetAsync();
-                    await service.Cache.StoreAsync(CacheDatabaseType.DataStructures, OffersKey, offers, TimeSpan.FromDays(1)).ConfigureAwait(false);
+                    await provider.Cache.StoreAsync(CacheDatabaseType.DataStructures, OffersKey, offers, TimeSpan.FromDays(1)).ConfigureAwait(false);
                 }
 
                 eventMetrics = new Dictionary<string, double>
@@ -925,7 +926,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(GetOffersAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(GetOffersAsync), eventProperties, eventMetrics);
 
                 return new List<Offer>(offers.Items);
             }
@@ -961,7 +962,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
                 {
                     requests = await operations.ServiceRequests.GetAsync().ConfigureAwait(false);
                 }
@@ -983,7 +984,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(GetServiceRequestsAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(GetServiceRequestsAsync), eventProperties, eventMetrics);
 
                 return requests;
             }
@@ -1028,7 +1029,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
                 {
                     subscription = await operations.Customers.ById(customerId).Subscriptions.ById(subscriptionId).GetAsync().ConfigureAwait(false);
                 }
@@ -1049,7 +1050,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(GetSubscriptionAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(GetSubscriptionAsync), eventProperties, eventMetrics);
 
                 return subscription;
             }
@@ -1090,7 +1091,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
                 {
                     subscriptions = await operations.Customers.ById(customerId).Subscriptions.GetAsync().ConfigureAwait(false);
                 }
@@ -1112,7 +1113,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(GetSubscriptionsAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(GetSubscriptionsAsync), eventProperties, eventMetrics);
 
                 return new List<Subscription>(subscriptions.Items);
             }
@@ -1158,7 +1159,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 usageRecords = new List<AzureUtilizationRecord>();
 
-                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
                 {
                     records = await operations.Customers.ById(customerId).Subscriptions.ById(subscriptionId)
                         .Utilization.Azure.QueryAsync(startTime, endTime).ConfigureAwait(false);
@@ -1196,7 +1197,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(GetSubscriptionUsageAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(GetSubscriptionUsageAsync), eventProperties, eventMetrics);
 
                 return usageRecords;
             }
@@ -1243,7 +1244,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId) ||
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId) ||
                     principal.CustomerId.Equals(customerId))
                 {
                     user = await operations.Customers.ById(customerId).Users.ById(userId).GetAsync().ConfigureAwait(false);
@@ -1266,7 +1267,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(GetUserAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(GetUserAsync), eventProperties, eventMetrics);
 
                 return user;
             }
@@ -1311,7 +1312,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId) ||
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId) ||
                     principal.CustomerId.Equals(customerId))
                 {
                     licenses = await operations.Customers.ById(customerId).Users.ById(userId).Licenses.GetAsync().ConfigureAwait(false);
@@ -1334,7 +1335,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(GetUserLicensesAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(GetUserLicensesAsync), eventProperties, eventMetrics);
 
                 return licenses;
             }
@@ -1380,7 +1381,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
                 {
                     updatedSubscription = await operations.Customers.ById(customerId).Subscriptions
                         .ById(subscription.Id).PatchAsync(subscription).ConfigureAwait(false);
@@ -1403,7 +1404,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(UpdateSubscriptionAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(UpdateSubscriptionAsync), eventProperties, eventMetrics);
 
                 return updatedSubscription;
             }
@@ -1445,7 +1446,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId) ||
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId) ||
                     principal.CustomerId.Equals(customerId))
                 {
                     user = await operations.Customers.ById(customerId).Users.ById(userId).PatchAsync(entity).ConfigureAwait(false);
@@ -1467,7 +1468,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(UpdateUserAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(UpdateUserAsync), eventProperties, eventMetrics);
 
                 return user;
             }
@@ -1516,7 +1517,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(service.Configuration.PartnerCenterApplicationTenantId) ||
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId) ||
                     principal.CustomerId.Equals(customerId))
                 {
                     await operations.Customers.ById(customerId).Users.ById(userId).LicenseUpdates.CreateAsync(entity).ConfigureAwait(false);
@@ -1538,7 +1539,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
 
-                service.Telemetry.TrackEvent(nameof(UpdateUserLicensesAsync), eventProperties, eventMetrics);
+                provider.Telemetry.TrackEvent(nameof(UpdateUserLicensesAsync), eventProperties, eventMetrics);
             }
             finally
             {
@@ -1587,7 +1588,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         {
             // Attempt to obtain the Partner Center token from the cache.
             IPartnerCredentials credentials =
-                 await service.Cache.FetchAsync<Models.PartnerCenterToken>(
+                 await provider.Cache.FetchAsync<Models.PartnerCenterToken>(
                      CacheDatabaseType.Authentication, PartnerCenterCacheKey).ConfigureAwait(false);
 
             if (credentials != null && !credentials.IsExpired())
@@ -1597,11 +1598,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
             // The access token has expired, so a new one must be requested.
             credentials = await PartnerCredentials.Instance.GenerateByApplicationCredentialsAsync(
-                service.Configuration.PartnerCenterApplicationId,
-                service.Configuration.PartnerCenterApplicationSecret.ToUnsecureString(),
-                service.Configuration.PartnerCenterApplicationTenantId).ConfigureAwait(false);
+                provider.Configuration.PartnerCenterApplicationId,
+                provider.Configuration.PartnerCenterApplicationSecret.ToUnsecureString(),
+                provider.Configuration.PartnerCenterApplicationTenantId).ConfigureAwait(false);
 
-            await service.Cache.StoreAsync(CacheDatabaseType.Authentication, PartnerCenterCacheKey, credentials).ConfigureAwait(false);
+            await provider.Cache.StoreAsync(CacheDatabaseType.Authentication, PartnerCenterCacheKey, credentials).ConfigureAwait(false);
 
             return credentials;
         }
@@ -1613,19 +1614,19 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// <returns>An instance of the partner service.</returns>
         private async Task<IPartner> GetUserOperationsAsync(Guid correlationId)
         {
-            AuthenticationResult token = await service.AccessToken.GetAccessTokenAsync(
-                $"{service.Configuration.ActiveDirectoryEndpoint}/{service.Configuration.PartnerCenterApplicationTenantId}",
-                service.Configuration.PartnerCenterEndpoint,
+            AuthenticationResult token = await provider.AccessToken.GetAccessTokenAsync(
+                $"{provider.Configuration.ActiveDirectoryEndpoint}/{provider.Configuration.PartnerCenterApplicationTenantId}",
+                provider.Configuration.PartnerCenterEndpoint,
                 new Models.ApplicationCredential
                 {
-                    ApplicationId = service.Configuration.ApplicationId,
-                    ApplicationSecret = service.Configuration.ApplicationSecret,
+                    ApplicationId = provider.Configuration.ApplicationId,
+                    ApplicationSecret = provider.Configuration.ApplicationSecret,
                     UseCache = true
                 },
-                service.AccessToken.UserAssertionToken).ConfigureAwait(false);
+                provider.AccessToken.UserAssertionToken).ConfigureAwait(false);
 
             IPartnerCredentials credentials = await PartnerCredentials.Instance.GenerateByUserCredentialsAsync(
-                service.Configuration.ApplicationId,
+                provider.Configuration.ApplicationId,
                 new AuthenticationToken(token.AccessToken, token.ExpiresOn)).ConfigureAwait(false);
 
             IAggregatePartner userOperations = PartnerService.Instance.CreatePartnerOperations(credentials);

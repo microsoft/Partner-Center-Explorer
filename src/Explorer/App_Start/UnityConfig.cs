@@ -7,28 +7,27 @@
 namespace Microsoft.Store.PartnerCenter.Explorer
 {
     using System;
-    using Logic;
+    using Providers;
     using Unity;
+    using Unity.Lifetime;
 
     /// <summary>
     /// Specifies the Unity configuration for the main container.
     /// </summary>
     public static class UnityConfig
     {
-        #region Unity Container
         private static Lazy<IUnityContainer> container =
-          new Lazy<IUnityContainer>(() =>
-          {
-              UnityContainer container = new UnityContainer();
-              RegisterTypes(container);
-              return container;
-          });
+            new Lazy<IUnityContainer>(() =>
+            {
+                UnityContainer container = new UnityContainer();
+                RegisterTypes(container);
+                return container;
+            });
 
         /// <summary>
         /// Configured Unity Container.
         /// </summary>
         public static IUnityContainer Container => container.Value;
-        #endregion
 
         /// <summary>
         /// Registers the type mappings with the Unity container.
@@ -42,7 +41,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
         /// </remarks>
         public static void RegisterTypes(IUnityContainer container)
         {
-            container.RegisterType<IExplorerService, ExplorerService>();
+            container.RegisterType<IExplorerProvider, ExplorerProvider>(new ContainerControlledLifetimeManager());
         }
     }
 }

@@ -4,7 +4,7 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace Microsoft.Store.PartnerCenter.Explorer.Security
+namespace Microsoft.Store.PartnerCenter.Explorer.Providers
 {
     using System.Threading.Tasks;
     using IdentityModel.Clients.ActiveDirectory;

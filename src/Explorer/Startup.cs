@@ -19,7 +19,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
         /// <param name="app">The application.</param>
         public void Configuration(IAppBuilder app)
         {
-            this.ConfigureAuth(app);
+            ConfigureAuth(app);
         }
     }
 }

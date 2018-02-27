@@ -1,5 +1,5 @@
 ﻿@model Microsoft.Store.PartnerCenter.Explorer.Models.ConfigurationRecordsModel
-@using Microsoft.Samples.AzureAD.Graph.API.Models;
+@using Microsoft.Graph
 
 <table class="table table-striped">
     <thead>
@@ -11,7 +11,7 @@
             <th>Service</th>
         </tr>
     </thead>
-    @foreach (ServiceConfigurationRecord record in Model.ServiceConfigurationRecords)
+    @foreach (DomainDnsRecord record in Model.ServiceConfigurationRecords)
     {
         <tr>
             <td>

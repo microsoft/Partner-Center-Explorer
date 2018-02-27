@@ -7,7 +7,7 @@
 namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 {
     using System.Web.Mvc;
-    using Logic;
+    using Providers;
     using Security;
 
     /// <summary>
@@ -19,8 +19,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// <summary>
         /// Initializes a new instance of the <see cref="HomeController"/> class.
         /// </summary>
-        /// <param name="service">Provides access to core services.</param>
-        public HomeController(IExplorerService service) : base(service)
+        public HomeController(IExplorerProvider provider) : base(provider)
         {
         }
 

@@ -7,7 +7,7 @@
 namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 {
     using System.Web.Mvc;
-    using Logic;
+    using Providers;
 
     /// <summary>
     /// Base controller for controllers.
@@ -17,22 +17,19 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// <summary>
         /// Provides access to the core application services.
         /// </summary>
-        private readonly IExplorerService service;
+        private readonly IExplorerProvider provider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseController"/> class.
         /// </summary>
-        /// <param name="service">Provides access to the core application services.</param>
-        protected BaseController(IExplorerService service)
+        protected BaseController(IExplorerProvider provider)
         {
-            service.AssertNotNull(nameof(service));
-
-            this.service = service;
+            this.provider = provider;
         }
 
         /// <summary>
         /// Provides access to the core application services.
         /// </summary>
-        protected IExplorerService Service => this.service;
+        protected IExplorerProvider Provider => provider;
     }
 }

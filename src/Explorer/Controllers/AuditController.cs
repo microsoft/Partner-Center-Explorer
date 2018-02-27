@@ -9,8 +9,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     using System;
     using System.Threading.Tasks;
     using System.Web.Mvc;
-    using Logic;
     using Models;
+    using Providers;
     using Security;
 
     /// <summary>
@@ -24,7 +24,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// Initializes a new instance of the <see cref="AuditController"/> class.
         /// </summary>
         /// <param name="service">Provides access to core services.</param>
-        public AuditController(IExplorerService service) : base(service)
+        public AuditController(IExplorerProvider provider) : base(provider)
         {
         }
 
@@ -38,7 +38,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         {
             AuditRecordsModel auditRecordsModel = new AuditRecordsModel()
             {
-                Records = await Service.PartnerOperations.GetAuditRecordsAsync(startDate, endDate).ConfigureAwait(false)
+                Records = await Provider.PartnerOperations.GetAuditRecordsAsync(startDate, endDate).ConfigureAwait(false)
             };
 
             return PartialView("Records", auditRecordsModel);

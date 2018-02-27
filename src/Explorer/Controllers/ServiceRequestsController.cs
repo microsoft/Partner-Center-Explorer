@@ -10,10 +10,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     using System.Linq;
     using System.Threading.Tasks;
     using System.Web.Mvc;
-    using Logic;
     using Models;
     using PartnerCenter.Models;
     using PartnerCenter.Models.ServiceRequests;
+    using Providers;
     using Security;
 
     /// <summary>
@@ -26,7 +26,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// Initializes a new instance of the <see cref="ServiceRequestsController"/> class.
         /// </summary>
         /// <param name="service">Provides access to core services.</param>
-        public ServiceRequestsController(IExplorerService service) : base(service)
+        public ServiceRequestsController(IExplorerProvider provider) : base(provider)
         {
         }
 
@@ -65,7 +65,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                requests = await Service.PartnerOperations.GetServiceRequestsAsync().ConfigureAwait(false);
+                requests = await Provider.PartnerOperations.GetServiceRequestsAsync().ConfigureAwait(false);
 
                 return requests.Items.Select(r => new ServiceRequestModel()
                 {

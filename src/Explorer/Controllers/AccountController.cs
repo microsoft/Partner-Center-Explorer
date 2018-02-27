@@ -50,12 +50,12 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// <returns>Returns a redirect to the home page.</returns>
         public ActionResult SignOutCallback()
         {
-            if (this.Request.IsAuthenticated)
+            if (Request.IsAuthenticated)
             {
-                return this.RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Home");
             }
 
-            return this.View();
+            return View();
         }
     }
 }

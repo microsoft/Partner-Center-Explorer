@@ -13,6 +13,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     using Models;
     using PartnerCenter.Models.Customers;
     using PartnerCenter.Models.Subscriptions;
+    using Providers;
     using Security;
 
     /// <summary>
@@ -25,7 +26,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// Initializes a new instance of the <see cref="UsageController"/> class.
         /// </summary>
         /// <param name="service">Provides access to core services.</param>
-        public UsageController(IExplorerService service) : base(service)
+        public UsageController(IExplorerProvider provider) : base(provider)
         {
         }
 
@@ -50,8 +51,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
             try
             {
-                customer = await Service.PartnerOperations.GetCustomerAsync(customerId).ConfigureAwait(false);
-                subscription = await Service.PartnerOperations.GetSubscriptionAsync(customerId, subscriptionId).ConfigureAwait(false);
+                customer = await Provider.PartnerOperations.GetCustomerAsync(customerId).ConfigureAwait(false);
+                subscription = await Provider.PartnerOperations.GetSubscriptionAsync(customerId, subscriptionId).ConfigureAwait(false);
 
                 UsageModel usageModel = new UsageModel()
                 {
@@ -59,7 +60,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                     CustomerId = customerId,
                     SubscriptionId = subscriptionId,
                     SubscriptionFriendlyName = subscription.FriendlyName,
-                    Usage = await Service.PartnerOperations
+                    Usage = await Provider.PartnerOperations
                         .GetSubscriptionUsageAsync(customerId, subscriptionId, DateTime.Now.AddMonths(-1), DateTime.Now).ConfigureAwait(false)
                 };
 

@@ -9,7 +9,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Office
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using Microsoft.IdentityModel.Clients.ActiveDirectory;
+    using IdentityModel.Clients.ActiveDirectory;
+    using Providers;
 
     /// <summary>
     /// Facilities interactions with the Office 365 Service Communications API.
@@ -24,23 +25,23 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Office
         /// <summary>
         /// Provides access to core services.
         /// </summary>
-        private readonly IExplorerService service;
+        private readonly IExplorerProvider provider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ServiceCommunications" /> class.
         /// </summary>
-        /// <param name="service">Provides access to core services.</param>
+        /// <param name="provider">Provides access to core services.</param>
         /// <param name="token">Access token to be used for the requests.</param>
         /// <exception cref="System.ArgumentException">
         /// <paramref name="token"/> is null.
         /// </exception>
         /// <exception cref="System.ArgumentNullException">
-        /// <paramref name="service"/> is null.
+        /// <paramref name="provider"/> is null.
         /// </exception>
-        public ServiceCommunications(IExplorerService service, AuthenticationResult token)
+        public ServiceCommunications(IExplorerProvider provider, AuthenticationResult token)
         {
-            service.AssertNotNull(nameof(service));
-            this.service = service;
+            provider.AssertNotNull(nameof(provider));
+            this.provider = provider;
             this.token = token;
         }
 
@@ -61,9 +62,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Office
 
             try
             {
-                requestUri = $"{service.Configuration.OfficeManagementEndpoint}/api/v1.0/{customerId}/ServiceComms/CurrentStatus";
+                requestUri = $"{provider.Configuration.OfficeManagementEndpoint}/api/v1.0/{customerId}/ServiceComms/CurrentStatus";
 
-                records = await service.Communication.GetAsync<Result<OfficeHealthEvent>>(
+                records = await provider.Communication.GetAsync<Result<OfficeHealthEvent>>(
                     requestUri,
                     token.AccessToken).ConfigureAwait(false);
 

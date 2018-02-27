@@ -11,6 +11,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
     using System.Security.Claims;
     using IdentityModel.Clients.ActiveDirectory;
     using Logic;
+    using Providers;
 
     /// <summary>
     /// Custom implementation of the <see cref="TokenCache"/> class.
@@ -34,39 +35,39 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         private readonly string resource;
 
         /// <summary>
-        /// Provides access to the core services.
+        /// Provides access to the core explorer providers.
         /// </summary>
-        private readonly IExplorerService service;
+        private readonly IExplorerProvider provider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedTokenCache"/> class.
         /// </summary>
-        /// <param name="service">Provides access to core services.</param>
+        /// <param name="provider">Provides access to the core explorer providers.</param>
         /// <param name="resource">The resource being accessed.</param>
         /// <param name="key">The unique identifier for the cache entry.</param>
         /// <exception cref="ArgumentException">
         /// <paramref name="resource"/> is empty or null.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="service"/> is null.
+        /// <paramref name="provider"/> is null.
         /// </exception>
-        public DistributedTokenCache(IExplorerService service, string resource, string key = null)
+        public DistributedTokenCache(IExplorerProvider provider, string resource, string key = null)
         {
-            service.AssertNotNull(nameof(service));
+            provider.AssertNotNull(nameof(provider));
             resource.AssertNotEmpty(nameof(resource));
 
-            this.service = service;
-            this.keyValue = key;
+            this.provider = provider;
+            keyValue = key;
             this.resource = resource;
 
-            this.AfterAccess = this.AfterAccessNotification;
-            this.BeforeAccess = this.BeforeAccessNotification;
+            AfterAccess = AfterAccessNotification;
+            BeforeAccess = BeforeAccessNotification;
         }
 
         /// <summary>
         /// Gets the unique identifier for the cache entry.
         /// </summary>
-        private string Key => string.IsNullOrEmpty(this.keyValue) ? $"Resource::{this.resource}::Identifier::{ClaimsPrincipal.Current.Identities.First().FindFirst(ObjectIdClaimType).Value}" : this.keyValue;
+        private string Key => string.IsNullOrEmpty(keyValue) ? $"Resource::{resource}::Identifier::{ClaimsPrincipal.Current.Identities.First().FindFirst(ObjectIdClaimType).Value}" : keyValue;
 
         /// <summary>
         /// Notification method called after any library method accesses the cache.
@@ -74,22 +75,22 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         /// <param name="args">Contains parameters used by the ADAL call accessing the cache.</param>
         public void AfterAccessNotification(TokenCacheNotificationArgs args)
         {
-            if (!this.HasStateChanged)
+            if (!HasStateChanged)
             {
                 return;
             }
 
-            if (this.Count > 0)
+            if (Count > 0)
             {
-                this.service.Cache.Store(
-                    CacheDatabaseType.Authentication, this.Key, Convert.ToBase64String(this.Serialize()));
+                provider.Cache.Store(
+                    CacheDatabaseType.Authentication, Key, Convert.ToBase64String(Serialize()));
             }
             else
             {
-                this.service.Cache.Delete(CacheDatabaseType.Authentication, this.Key);
+                provider.Cache.Delete(CacheDatabaseType.Authentication, Key);
             }
 
-            this.HasStateChanged = false;
+            HasStateChanged = false;
         }
 
         /// <summary>
@@ -98,14 +99,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         /// <param name="args">Contains parameters used by the ADAL call accessing the cache.</param>
         public void BeforeAccessNotification(TokenCacheNotificationArgs args)
         {
-            string value = this.service.Cache.Fetch<string>(CacheDatabaseType.Authentication, this.Key);
+            string value = provider.Cache.Fetch<string>(CacheDatabaseType.Authentication, Key);
 
             if (string.IsNullOrEmpty(value))
             {
                 return;
             }
 
-            this.Deserialize(Convert.FromBase64String(value));
+            Deserialize(Convert.FromBase64String(value));
         }
 
         /// <summary>
@@ -115,7 +116,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         public override void Clear()
         {
             base.Clear();
-            this.service.Cache.Clear(CacheDatabaseType.Authentication);
+            provider.Cache.Clear(CacheDatabaseType.Authentication);
         }
 
         /// <summary>
@@ -125,7 +126,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Cache
         public override void DeleteItem(TokenCacheItem item)
         {
             base.DeleteItem(item);
-            this.service.Cache.Delete(CacheDatabaseType.Authentication, this.Key);
+            provider.Cache.Delete(CacheDatabaseType.Authentication, Key);
         }
     }
 }

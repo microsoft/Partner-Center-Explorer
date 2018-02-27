@@ -11,13 +11,13 @@ namespace Microsoft.Store.PartnerCenter.Explorer
     using System.Web.Mvc;
     using System.Web.Optimization;
     using System.Web.Routing;
-    using Logic;
+    using Providers;
     using Unity;
 
     /// <summary>
     /// Defines the methods and properties that are common to application objects.
     /// </summary>
-    /// <seealso cref="System.Web.HttpApplication" />
+    /// <seealso cref="HttpApplication" />
     public class MvcApplication : HttpApplication
     {
         /// <summary>
@@ -25,18 +25,18 @@ namespace Microsoft.Store.PartnerCenter.Explorer
         /// </summary>
         protected void Application_Start()
         {
-            IExplorerService service;
+            IExplorerProvider provider;
 
             try
             {
                 AreaRegistration.RegisterAllAreas();
 
-                service = UnityConfig.Container.Resolve<IExplorerService>();
+                provider = UnityConfig.Container.Resolve<IExplorerProvider>();
 
-                Task.Run(service.InitializeAsync).Wait();
+                Task.Run(provider.InitializeAsync).Wait();
 
                 ApplicationInsights.Extensibility.TelemetryConfiguration.Active.InstrumentationKey =
-                    service.Configuration.InstrumentationKey;
+                    provider.Configuration.InstrumentationKey;
 
                 FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
                 RouteConfig.RegisterRoutes(RouteTable.Routes);
@@ -44,7 +44,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
             }
             finally
             {
-                service = null; 
+                provider = null;
             }
         }
     }

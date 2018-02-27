@@ -12,8 +12,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
     using System.Threading.Tasks;
     using Microsoft.Azure.Management.ResourceManager;
     using Microsoft.Azure.Management.ResourceManager.Models;
-    using Microsoft.Rest;
-    using Microsoft.Rest.Azure;
+    using Providers;
+    using Rest;
+    using Rest.Azure;
 
     /// <summary>
     /// Facilitates interactions with the Azure Resource Manager API.
@@ -24,7 +25,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
         /// <summary>
         /// Provides access to core services.
         /// </summary>
-        private readonly IExplorerService service;
+        private readonly IExplorerProvider provider;
 
         /// <summary>
         /// Provides the ability to interact with the Azure Resource Manager API.
@@ -39,21 +40,21 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
         /// <summary>
         /// Initializes a new instance of the <see cref="ResourceManager"/> class.
         /// </summary>
-        /// <param name="service">Provides access to core services.</param>
+        /// <param name="provider">Provides access to core services.</param>
         /// <param name="token">A valid JSON Web Token (JWT).</param>
         /// <exception cref="ArgumentException">
         /// <paramref name="token"/> is empty or null.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="service"/> is null.
+        /// <paramref name="provider"/> is null.
         /// </exception>
-        public ResourceManager(IExplorerService service, string token)
+        public ResourceManager(IExplorerProvider provider, string token)
         {
-            service.AssertNotNull(nameof(service));
+            provider.AssertNotNull(nameof(provider));
             token.AssertNotEmpty(nameof(token));
 
             client = new ResourceManagementClient(new TokenCredentials(token));
-            this.service = service;
+            this.provider = provider;
         }
 
         /// <summary>
