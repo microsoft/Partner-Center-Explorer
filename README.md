@@ -7,7 +7,7 @@ project enables you (the partner), customers, and end-users the ability to manag
 various resources. The primary purpose of this solution is to educate you on what 
 is possible and how it can be accomplished.
  
-This project is being provided with community support only. If you need help please
+This project is being provided with community support only. If you need help please,
 log an issue using the [issue tracker](https://github.com/Microsoft/Partner-Center-Explorer/issues).
  
 ## Deployment

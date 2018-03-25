@@ -85,13 +85,7 @@ $adAppAccess = [Microsoft.Open.AzureAD.Model.RequiredResourceAccess]@{
     ResourceAccess = 
     [Microsoft.Open.AzureAD.Model.ResourceAccess]@{
         Id = "311a71cc-e848-46a1-bdf8-97ff7156d8e6";
-        Type = "Scope"},
-    [Microsoft.Open.AzureAD.Model.ResourceAccess]@{
-        Id = "a42657d6-7f20-40e3-b6f0-cee03008a62a";
-        Type = "Scope"},
-    [Microsoft.Open.AzureAD.Model.ResourceAccess]@{
-        Id = "5778995a-e1bf-45b8-affa-663a9f3f4d04";
-        Type = "Role"}
+        Type = "Scope"}
 }
 
 $azureAppAccess = [Microsoft.Open.AzureAD.Model.RequiredResourceAccess]@{
@@ -100,6 +94,17 @@ $azureAppAccess = [Microsoft.Open.AzureAD.Model.RequiredResourceAccess]@{
         [Microsoft.Open.AzureAD.Model.ResourceAccess]@{
             Id = "41094075-9dad-400e-a0bd-54e686782033";
             Type = "Scope"}
+}
+
+$graphAppAccess = [Microsoft.Open.AzureAD.Model.RequiredResourceAccess]@{
+    ResourceAppId = "00000003-0000-0000-c000-000000000000";
+    ResourceAccess = 
+        [Microsoft.Open.AzureAD.Model.ResourceAccess]@{
+            Id = "7e05723c-0bb0-42da-be95-ae9f08a6e53c";
+            Type = "Role"},
+    [Microsoft.Open.AzureAD.Model.ResourceAccess]@{
+        Id = "7ab1d382-f21e-4acd-a863-ba3e13f7da61";
+        Type = "Role"}
 }
 
 $officeAppAccess = [Microsoft.Open.AzureAD.Model.RequiredResourceAccess]@{
@@ -120,7 +125,7 @@ $partnerCenterAppAccess = [Microsoft.Open.AzureAD.Model.RequiredResourceAccess]@
 
 Write-Host -ForegroundColor Green "Creating the Azure AD application and related resources..."
 
-$app = New-AzureADApplication -AvailableToOtherTenants $true -DisplayName $DisplayName -IdentifierUris "https://$($sessionInfo.TenantDomain)/$((New-Guid).ToString())" -RequiredResourceAccess $adAppAccess, $azureAppAccess, $officeAppAccess, $partnerCenterAppAccess
+$app = New-AzureADApplication -AvailableToOtherTenants $true -DisplayName $DisplayName -IdentifierUris "https://$($sessionInfo.TenantDomain)/$((New-Guid).ToString())" -RequiredResourceAccess $adAppAccess, $azureAppAccess, $graphAppAccess, $officeAppAccess, $partnerCenterAppAccess
 
 $spn = New-AzureADServicePrincipal -AppId $app.AppId -DisplayName $DisplayName
 

@@ -6,6 +6,7 @@
 
 namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 {
+    using System;
     using System.Web.Mvc;
     using Providers;
     using Security;
@@ -13,7 +14,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     /// <summary>
     /// Controller for all Home views.
     /// </summary>
-    [AuthorizationFilter(Roles = UserRole.Partner)]
     public class HomeController : BaseController
     {
         /// <summary>
@@ -27,6 +27,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// Handles the request for the index view.
         /// </summary>
         /// <returns>The HTML template for the index page.</returns>
+        [AuthorizationFilter(Roles = UserRole.Partner)]
         public ActionResult Index()
         {
             return View();
@@ -36,8 +37,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// Handles the request for the error view.
         /// </summary>
         /// <returns>The HTML template for the error page.</returns>
-        public ActionResult Error()
+        public ActionResult Error(string message)
         {
+            ViewBag.ErrorMessage = message;
             return View();
         }
     }

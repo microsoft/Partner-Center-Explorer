@@ -52,7 +52,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
                             provider.Telemetry.TrackException(context.Exception);
 
                             // Pass in the context back to the app
-                            context.OwinContext.Response.Redirect("/Home/Error");
+                            context.OwinContext.Response.Redirect($"/Home/Error?message={context.Exception.Message}");
 
                             // Suppress the exception
                             context.HandleResponse();

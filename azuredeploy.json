@@ -27,10 +27,6 @@
       "type": "string",
       "minLength": 1
     },
-    "branch": {
-      "type": "string",
-      "defaultValue": "master"
-    },
     "cacheSKUName": {
       "type": "string",
       "allowedValues": [
@@ -84,6 +80,10 @@
       "type": "string",
       "defaultValue": "https://github.com/Microsoft/Partner-Center-Explorer"
     },
+    "branch": {
+      "type": "string",
+      "defaultValue": "master"
+    },
     "webSiteName": {
       "type": "string",
       "maxLength": 15,
@@ -111,15 +111,10 @@
       "metadata": {
         "description": "Describes plan's pricing tier and instance size. Check details at https://azure.microsoft.com/en-us/pricing/details/app-service/"
       }
-    },
-    "keyVaultName": {
-      "type": "string",
-      "metadata": {
-        "description": "Key Vault to be created. The web app will be granted access to this instance of Key Vault."
-      }
     }
   },
   "variables": {
+    "keyVaultName": "[concat('vault', uniqueString(resourceGroup().id))]",
     "cacheName": "[concat('cache', uniqueString(resourceGroup().id))]",
     "hostingPlanName": "[concat('hostingplan', uniqueString(resourceGroup().id))]",
     "identityResourceId": "[concat(resourceId('Microsoft.Web/sites', parameters('webSiteName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]"
@@ -223,7 +218,7 @@
           "properties": {
             "ApplicationId": "[parameters('applicationId')]",
             "ApplicationTenantId": "[parameters('applicationTenantId')]",
-            "KeyVaultEndpoint": "[concat('https://', parameters('keyVaultName'), '.vault.azure.net')]",
+            "KeyVaultEndpoint": "[concat('https://', variables('keyVaultName'), '.vault.azure.net')]",
             "InstrumentationKey": "[reference(concat('Microsoft.Insights/components/', parameters('webSiteName'))).InstrumentationKey]",
             "PartnerCenterApplicationId": "[parameters('partnerCenterApplicationId')]",
             "PartnerCenterApplicationTenantId": "[parameters('partnerCenterApplicationTenantId')]"
@@ -233,7 +228,7 @@
     },
     {
       "type": "Microsoft.KeyVault/vaults",
-      "name": "[parameters('keyVaultName')]",
+      "name": "[variables('keyVaultName')]",
       "apiVersion": "2015-06-01",
       "location": "[resourceGroup().location]",
       "tags": {},
@@ -262,31 +257,31 @@
     },
     {
       "type": "Microsoft.KeyVault/vaults/secrets",
-      "name": "[concat(parameters('keyVaultName'), '/', 'ApplicationSecret')]",
+      "name": "[concat(variables('keyVaultName'), '/', 'ApplicationSecret')]",
       "apiVersion": "2015-06-01",
       "properties": {
         "contentType": "text/plain",
         "value": "[parameters('applicationSecret')]"
       },
       "dependsOn": [
-        "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"
+        "[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]"
       ]
     },
     {
       "type": "Microsoft.KeyVault/vaults/secrets",
-      "name": "[concat(parameters('keyVaultName'), '/', 'PartnerCenterApplicationSecret')]",
+      "name": "[concat(variables('keyVaultName'), '/', 'PartnerCenterApplicationSecret')]",
       "apiVersion": "2015-06-01",
       "properties": {
         "contentType": "text/plain",
         "value": "[parameters('partnerCenterApplicationSecret')]"
       },
       "dependsOn": [
-        "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"
+        "[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]"
       ]
     },
     {
       "type": "Microsoft.KeyVault/vaults/secrets",
-      "name": "[concat(parameters('keyVaultName'), '/', 'RedisConnectionString')]",
+      "name": "[concat(variables('keyVaultName'), '/', 'RedisConnectionString')]",
       "apiVersion": "2015-06-01",
       "properties": {
         "contentType": "text/plain",
@@ -294,7 +289,7 @@
       },
       "dependsOn": [
         "[concat('Microsoft.Cache/Redis/', variables('cacheName'))]",
-        "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"
+        "[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]"
       ]
     }
   ]
