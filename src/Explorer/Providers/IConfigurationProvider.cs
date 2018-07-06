@@ -50,11 +50,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Providers
         string InstrumentationKey { get; }
 
         /// <summary>
-        /// Gets a value indicating whether or not the reseller tenant is the TIP tenant.
-        /// </summary>
-        bool IsIntegrationSandbox { get; }
-
-        /// <summary>
         /// Gets the endpoint address for the instance of Key Vault.
         /// </summary>
         string KeyVaultEndpoint { get; }
@@ -65,6 +60,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Providers
         string OfficeManagementEndpoint { get; }
 
         /// <summary>
+        /// Gets the Partner Center application tenant identifier.
+        /// </summary>
+        string PartnerCenterAccountId { get; }
+
+        /// <summary>
         /// Gets the Partner Center application identifier.
         /// </summary>
         string PartnerCenterApplicationId { get; }
@@ -73,11 +73,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Providers
         /// Gets the Partner Center application secret.
         /// </summary>
         SecureString PartnerCenterApplicationSecret { get; }
-
-        /// <summary>
-        /// Gets the Partner Center application tenant identifier.
-        /// </summary>
-        string PartnerCenterApplicationTenantId { get; }
 
         /// <summary>
         /// Gets the Partner Center endpoint address.

@@ -6,7 +6,6 @@
 
 namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 {
-    using System;
     using System.Web.Mvc;
     using Providers;
     using Security;
@@ -27,7 +26,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// Handles the request for the index view.
         /// </summary>
         /// <returns>The HTML template for the index page.</returns>
-        [AuthorizationFilter(Roles = UserRole.Partner)]
+        [AuthorizationFilter(Roles = UserRoles.Partner)]
         public ActionResult Index()
         {
             return View();

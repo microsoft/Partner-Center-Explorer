@@ -15,6 +15,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
     public class EditUserModel
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="EditUserModel" /> class.
+        /// </summary>
+        public EditUserModel()
+        {
+            Licenses = new List<LicenseModel>(); 
+        }
+
+        /// <summary>
         /// Gets or sets the customer identifier.
         /// </summary>
         public string CustomerId { get; set; }
@@ -43,7 +51,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
         /// <summary>
         /// Gets or sets licenses for the user.
         /// </summary>
-        public List<LicenseModel> Licenses { get; set; }
+        public List<LicenseModel> Licenses { get; }
 
         /// <summary>
         /// Gets or sets the password.

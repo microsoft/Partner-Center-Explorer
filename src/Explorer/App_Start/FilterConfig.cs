@@ -13,7 +13,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
     /// <summary>
     /// Configures the application filters.
     /// </summary>
-    public class FilterConfig
+    public static class FilterConfig
     {
         /// <summary>
         /// Registers the global filters.
@@ -21,7 +21,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
         /// <param name="filters">The global filter collection.</param>
         public static void RegisterGlobalFilters(GlobalFilterCollection filters)
         {
-            filters.Add(new AuthenticationFilter());
+            filters.Add(new AuthenticationFilterAttribute());
             filters.Add(new TelemetryHandleErrorAttribute());
         }
     }

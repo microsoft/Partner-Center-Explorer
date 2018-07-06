@@ -40,30 +40,34 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         public async Task<PartialViewResult> GetOffersAsync(string customerId)
         {
             List<Offer> offers;
+            List<OfferModel> models;
             OffersModel offersModel;
 
             try
             {
                 offers = await Provider.PartnerOperations.GetOffersAsync().ConfigureAwait(false);
 
-                offersModel = new OffersModel
+                offersModel = new OffersModel()
                 {
-                    AvailableOffers = (from offer in offers
-                                       where offer.IsAvailableForPurchase
-                                       select new OfferModel()
-                                       {
-                                           Billing = offer.Billing,
-                                           Description = offer.Description,
-                                           Id = offer.Id,
-                                           IsAddOn = offer.IsAddOn,
-                                           IsAvailableForPurchase = offer.IsAvailableForPurchase,
-                                           MaximumQuantity = offer.MaximumQuantity,
-                                           MinimumQuantity = offer.MinimumQuantity,
-                                           Name = offer.Name,
-                                           PrerequisiteOffers = offer.PrerequisiteOffers
-                                       }).ToList(),
                     CustomerId = customerId
                 };
+
+                models = (from offer in offers
+                          where offer.IsAvailableForPurchase
+                          select new OfferModel()
+                          {
+                              Billing = offer.Billing,
+                              Description = offer.Description,
+                              Id = offer.Id,
+                              IsAddOn = offer.IsAddOn,
+                              IsAvailableForPurchase = offer.IsAvailableForPurchase,
+                              MaximumQuantity = offer.MaximumQuantity,
+                              MinimumQuantity = offer.MinimumQuantity,
+                              Name = offer.Name,
+                              PrerequisiteOffers = offer.PrerequisiteOffers
+                          }).ToList();
+
+                offersModel.AvailableOffers.AddRange(models);
 
                 return PartialView("Offers", offersModel);
             }
@@ -94,7 +98,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                 offers = await Provider.PartnerOperations.GetOffersAsync().ConfigureAwait(false);
 
                 return Json(
-                    offers.Single(x => x.Id.Equals(offerId, StringComparison.CurrentCultureIgnoreCase)), 
+                    offers.Single(x => x.Id.Equals(offerId, StringComparison.CurrentCultureIgnoreCase)),
                     JsonRequestBehavior.AllowGet);
             }
             finally

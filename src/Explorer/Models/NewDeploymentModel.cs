@@ -6,6 +6,7 @@
 
 namespace Microsoft.Store.PartnerCenter.Explorer.Models
 {
+    using System;
     using System.ComponentModel.DataAnnotations;
 
     /// <summary>
@@ -23,7 +24,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
         /// </summary>
         [Display(Name = "Parameters Link")]
         [Required]
-        public string ParametersUri { get; set; }
+        public Uri ParametersUri { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the resource group.
@@ -40,6 +41,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
         /// </summary>
         [Display(Name = "Template Link")]
         [Required]
-        public string TemplateUri { get; set; }
+        public Uri TemplateUri { get; set; }
     }
 }

@@ -10,8 +10,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using global::Owin;
-    using Logic;
     using IdentityModel.Tokens;
+    using Logic;
     using Models;
     using Owin.Security;
     using Owin.Security.Cookies;

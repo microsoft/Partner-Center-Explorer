@@ -17,7 +17,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     /// Controller for Audit views.
     /// </summary>
     /// <seealso cref="System.Web.Mvc.Controller" />
-    [AuthorizationFilter(Roles = UserRole.Partner)]
+    [AuthorizationFilter(Roles = UserRoles.Partner)]
     public class AuditController : BaseController
     {
         /// <summary>

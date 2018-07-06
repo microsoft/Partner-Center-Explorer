@@ -7,11 +7,9 @@
   },
   "applicationSecret": {
     "value": ""
-
   },
   "applicationTenantId": {
     "value": ""
-
   },
   "branch": {
     "value": "master"
@@ -25,13 +23,13 @@
   "cacheSKUCapacity": {
     "value": 0
   },
+  "partnerCenterAccountId": {
+    "value": ""
+  },
   "partnerCenterApplicationId": {
     "value": ""
   },
   "partnerCenterApplicationSecret": {
-    "value": ""
-  },
-  "partnerCenterApplicationTenantId": {
     "value": ""
   },
   "repoUrl": {

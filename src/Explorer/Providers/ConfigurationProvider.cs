@@ -6,7 +6,6 @@
 
 namespace Microsoft.Store.PartnerCenter.Explorer.Providers
 {
-    using System;
     using System.Configuration;
     using System.Security;
     using System.Threading.Tasks;
@@ -77,14 +76,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Providers
         public string KeyVaultEndpoint { get; private set; }
 
         /// <summary>
-        /// Gets a value indicating whether or not the reseller tenant is the TIP tenant.
-        /// </summary>
-        public bool IsIntegrationSandbox => Convert.ToBoolean(ConfigurationManager.AppSettings["IsIntegrationSandbox"]);
-
-        /// <summary>
         /// Gets the Office 365 Management endpoint address.
         /// </summary>
         public string OfficeManagementEndpoint { get; private set; }
+
+        /// <summary>
+        /// Gets the Partner Center application tenant identifier.
+        /// </summary>
+        public string PartnerCenterAccountId { get; private set; }
 
         /// <summary>
         /// Gets the Partner Center application identifier.
@@ -95,11 +94,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Providers
         /// Gets the Partner Center application secret.
         /// </summary>
         public SecureString PartnerCenterApplicationSecret { get; private set; }
-
-        /// <summary>
-        /// Gets the Partner Center application tenant identifier.
-        /// </summary>
-        public string PartnerCenterApplicationTenantId { get; private set; }
 
         /// <summary>
         /// Gets the Partner Center endpoint address.
@@ -117,7 +111,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Providers
         /// <returns>An instance of the  <see cref="Task"/> class that represents the asynchronous operation.</returns>
         public async Task InitializeAsync()
         {
-
             ActiveDirectoryEndpoint = ConfigurationManager.AppSettings["ActiveDirectoryEndpoint"];
             ApplicationId = ConfigurationManager.AppSettings["ApplicationId"];
             ApplicationTenantId = ConfigurationManager.AppSettings["ApplicationTenantId"];
@@ -126,8 +119,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Providers
             InstrumentationKey = ConfigurationManager.AppSettings["InstrumentationKey"];
             KeyVaultEndpoint = ConfigurationManager.AppSettings["KeyVaultEndpoint"];
             OfficeManagementEndpoint = ConfigurationManager.AppSettings["OfficeManagementEndpoint"];
+            PartnerCenterAccountId = ConfigurationManager.AppSettings["PartnerCenterAccountId"];
             PartnerCenterApplicationId = ConfigurationManager.AppSettings["PartnerCenterApplicationId"];
-            PartnerCenterApplicationTenantId = ConfigurationManager.AppSettings["PartnerCenterApplicationTenantId"];
             PartnerCenterEndpoint = ConfigurationManager.AppSettings["PartnerCenterEndpoint"];
 
             ApplicationSecret = await service.Vault.GetAsync("ApplicationSecret").ConfigureAwait(false);

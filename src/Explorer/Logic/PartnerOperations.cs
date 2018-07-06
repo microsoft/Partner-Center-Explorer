@@ -8,6 +8,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Security.Claims;
     using System.Threading.Tasks;
     using Cache;
@@ -118,7 +119,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                 {
                     { "CustomerId", principal.CustomerId },
                     { "Domain", domain },
-                    { "Exists", exists.ToString() },
+                    { "Exists", exists.ToString(CultureInfo.CurrentCulture) },
                     { "Name", principal.Name },
                     { "ParternCenterCorrelationId", correlationId.ToString() }
                 };
@@ -164,7 +165,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (!principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
+                if (!principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
@@ -225,9 +226,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    newEntity = await operations.Customers.ById(customerId).Orders.CreateAsync(newOrder);
+                    newEntity = await operations.Customers.ById(customerId).Orders.CreateAsync(newOrder).ConfigureAwait(false);
                 }
                 else
                 {
@@ -297,7 +298,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     user = await operations.Customers.ById(customerId).Users.CreateAsync(newEntity).ConfigureAwait(false);
                 }
@@ -359,7 +360,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (!principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
+                if (!principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
@@ -423,7 +424,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (!principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
+                if (!principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
@@ -533,7 +534,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     customer = await operations.Customers.ById(customerId).GetAsync().ConfigureAwait(false);
                 }
@@ -594,7 +595,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 customers = new List<Customer>();
 
-                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     seekCustomers = await operations.Customers.GetAsync().ConfigureAwait(false);
                     customersEnumerator = operations.Enumerators.Customers.Create(seekCustomers);
@@ -667,8 +668,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId) ||
-                    principal.CustomerId.Equals(customerId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase) ||
+                    principal.CustomerId.Equals(customerId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     skus = await operations.Customers.ById(customerId).SubscribedSkus.GetAsync().ConfigureAwait(false);
                 }
@@ -731,7 +732,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (!principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
+                if (!principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
@@ -793,7 +794,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (!principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
+                if (!principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
@@ -849,7 +850,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (!principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
+                if (!principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     throw new UnauthorizedAccessException("You are not authorized to perform this operation.");
                 }
@@ -909,7 +910,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 if (offers == null)
                 {
-                    offers = await operations.Offers.ByCountry("US").GetAsync();
+                    offers = await operations.Offers.ByCountry("US").GetAsync().ConfigureAwait(false);
                     await provider.Cache.StoreAsync(CacheDatabaseType.DataStructures, OffersKey, offers, TimeSpan.FromDays(1)).ConfigureAwait(false);
                 }
 
@@ -962,7 +963,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     requests = await operations.ServiceRequests.GetAsync().ConfigureAwait(false);
                 }
@@ -1029,7 +1030,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     subscription = await operations.Customers.ById(customerId).Subscriptions.ById(subscriptionId).GetAsync().ConfigureAwait(false);
                 }
@@ -1091,7 +1092,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     subscriptions = await operations.Customers.ById(customerId).Subscriptions.GetAsync().ConfigureAwait(false);
                 }
@@ -1159,7 +1160,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 usageRecords = new List<AzureUtilizationRecord>();
 
-                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     records = await operations.Customers.ById(customerId).Subscriptions.ById(subscriptionId)
                         .Utilization.Azure.QueryAsync(startTime, endTime).ConfigureAwait(false);
@@ -1244,8 +1245,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId) ||
-                    principal.CustomerId.Equals(customerId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase) ||
+                    principal.CustomerId.Equals(customerId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     user = await operations.Customers.ById(customerId).Users.ById(userId).GetAsync().ConfigureAwait(false);
                 }
@@ -1312,8 +1313,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId) ||
-                    principal.CustomerId.Equals(customerId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase) ||
+                    principal.CustomerId.Equals(customerId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     licenses = await operations.Customers.ById(customerId).Users.ById(userId).Licenses.GetAsync().ConfigureAwait(false);
                 }
@@ -1381,7 +1382,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     updatedSubscription = await operations.Customers.ById(customerId).Subscriptions
                         .ById(subscription.Id).PatchAsync(subscription).ConfigureAwait(false);
@@ -1446,8 +1447,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId) ||
-                    principal.CustomerId.Equals(customerId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase) ||
+                    principal.CustomerId.Equals(customerId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     user = await operations.Customers.ById(customerId).Users.ById(userId).PatchAsync(entity).ConfigureAwait(false);
                 }
@@ -1517,8 +1518,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
-                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId) ||
-                    principal.CustomerId.Equals(customerId))
+                if (principal.CustomerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase) ||
+                    principal.CustomerId.Equals(customerId, StringComparison.InvariantCultureIgnoreCase))
                 {
                     await operations.Customers.ById(customerId).Users.ById(userId).LicenseUpdates.CreateAsync(entity).ConfigureAwait(false);
                 }
@@ -1600,7 +1601,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             credentials = await PartnerCredentials.Instance.GenerateByApplicationCredentialsAsync(
                 provider.Configuration.PartnerCenterApplicationId,
                 provider.Configuration.PartnerCenterApplicationSecret.ToUnsecureString(),
-                provider.Configuration.PartnerCenterApplicationTenantId).ConfigureAwait(false);
+                provider.Configuration.PartnerCenterAccountId).ConfigureAwait(false);
 
             await provider.Cache.StoreAsync(CacheDatabaseType.Authentication, PartnerCenterCacheKey, credentials).ConfigureAwait(false);
 
@@ -1615,7 +1616,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         private async Task<IPartner> GetUserOperationsAsync(Guid correlationId)
         {
             AuthenticationResult token = await provider.AccessToken.GetAccessTokenAsync(
-                $"{provider.Configuration.ActiveDirectoryEndpoint}/{provider.Configuration.PartnerCenterApplicationTenantId}",
+                $"{provider.Configuration.ActiveDirectoryEndpoint}/{provider.Configuration.PartnerCenterAccountId}",
                 provider.Configuration.PartnerCenterEndpoint,
                 new Models.ApplicationCredential
                 {

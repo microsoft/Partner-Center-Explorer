@@ -14,9 +14,17 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
     public class OffersModel
     {
         /// <summary>
-        /// Gets or sets the available offers from Partner Center.
+        /// Initializes a new instance of the <see cref="OffersModel" /> class.
         /// </summary>
-        public List<OfferModel> AvailableOffers { get; set; }
+        public OffersModel()
+        {
+            AvailableOffers = new List<OfferModel>();
+        }
+
+        /// <summary>
+        /// Gets the available offers from Partner Center.
+        /// </summary>
+        public List<OfferModel> AvailableOffers { get; }
 
         /// <summary>
         /// Gets or sets the customer identifier.

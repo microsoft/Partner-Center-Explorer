@@ -14,13 +14,21 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
     public class UsersModel
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="UsersModel" /> class.
+        /// </summary>
+        public UsersModel()
+        {
+            Users = new List<UserModel>();
+        }
+
+        /// <summary>
         /// Gets or sets the customer identifier.
         /// </summary>
         public string CustomerId { get; set; }
 
         /// <summary>
-        /// Gets or sets a collection of users that belong to a specific customer.
+        /// Gets a collection of users that belong to a specific customer.
         /// </summary>
-        public List<UserModel> Users { get; set; }
+        public List<UserModel> Users { get; }
     }
 }

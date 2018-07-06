@@ -25,7 +25,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     /// <summary>
     /// Handles requests for the Manage views.
     /// </summary>
-    [AuthorizationFilter(Roles = UserRole.Partner)]
+    [AuthorizationFilter(Roles = UserRoles.Partner)]
     public class ManageController : BaseController
     {
         /// <summary>

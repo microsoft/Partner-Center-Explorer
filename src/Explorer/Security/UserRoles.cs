@@ -13,7 +13,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
     /// Defines the various user roles.
     /// </summary>
     [Flags]
-    public enum UserRole
+    public enum UserRoles
     {
         /// <summary>
         /// Partner Center role that provides complete access to Partner Center.

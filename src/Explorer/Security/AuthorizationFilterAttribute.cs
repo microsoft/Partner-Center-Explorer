@@ -17,12 +17,12 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
     /// Authorization filter attribute used to verify authenticated user has the specified claim and value.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = true, AllowMultiple = true)]
-    public class AuthorizationFilterAttribute : AuthorizeAttribute
+    public sealed class AuthorizationFilterAttribute : AuthorizeAttribute
     {
         /// <summary>
         /// Gets or sets the required roles.
         /// </summary>
-        public new UserRole Roles { get; set; }
+        public new UserRoles Roles { get; set; }
 
         /// <summary>
         /// Verifies the authenticated user has the appropriate privileges.
@@ -37,7 +37,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
             {
                 principal = httpContext.User as CustomerPrincipal;
 
-                foreach (string role in this.GetRoles(this.Roles))
+                foreach (string role in GetRoles(Roles))
                 {
                     if (principal.HasClaim(System.Security.Claims.ClaimTypes.Role, role))
                     {
@@ -65,9 +65,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
                     new RouteValueDictionary(
                         new
                         {
-                            controller = "Error",
-                            action = "ShowError",
-                            errorMessage = "You do not have sufficient priviliges to view this page."
+                            controller = "Home",
+                            action = "Error",
+                            message = "You do not have sufficient priviliges to view this page."
                         }));
             }
             else
@@ -81,38 +81,38 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Security
         /// </summary>
         /// <param name="requiredRole">User role required to perform the operation.</param>
         /// <returns>A list of roles that required to perform the operation.</returns>
-        private List<string> GetRoles(UserRole requiredRole)
+        private static List<string> GetRoles(UserRoles requiredRole)
         {
             List<string> required = new List<string>();
 
-            if (requiredRole.HasFlag(UserRole.AdminAgents))
+            if (requiredRole.HasFlag(UserRoles.AdminAgents))
             {
-                required.Add(UserRole.AdminAgents.GetDescription());
+                required.Add(UserRoles.AdminAgents.GetDescription());
             }
 
-            if (requiredRole.HasFlag(UserRole.BillingAdmin))
+            if (requiredRole.HasFlag(UserRoles.BillingAdmin))
             {
-                required.Add(UserRole.BillingAdmin.GetDescription());
+                required.Add(UserRoles.BillingAdmin.GetDescription());
             }
 
-            if (requiredRole.HasFlag(UserRole.GlobalAdmin))
+            if (requiredRole.HasFlag(UserRoles.GlobalAdmin))
             {
-                required.Add(UserRole.GlobalAdmin.GetDescription());
+                required.Add(UserRoles.GlobalAdmin.GetDescription());
             }
 
-            if (requiredRole.HasFlag(UserRole.HelpdeskAgent))
+            if (requiredRole.HasFlag(UserRoles.HelpdeskAgent))
             {
-                required.Add(UserRole.HelpdeskAgent.GetDescription());
+                required.Add(UserRoles.HelpdeskAgent.GetDescription());
             }
 
-            if (requiredRole.HasFlag(UserRole.User))
+            if (requiredRole.HasFlag(UserRoles.User))
             {
-                required.Add(UserRole.User.GetDescription());
+                required.Add(UserRoles.User.GetDescription());
             }
 
-            if (requiredRole.HasFlag(UserRole.UserAdministrator))
+            if (requiredRole.HasFlag(UserRoles.UserAdministrator))
             {
-                required.Add(UserRole.UserAdministrator.GetDescription());
+                required.Add(UserRoles.UserAdministrator.GetDescription());
             }
 
             return required;

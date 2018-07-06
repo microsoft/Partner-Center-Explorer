@@ -11,7 +11,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
     /// <summary>
     /// Configures the bundles used by the application.
     /// </summary>
-    public class BundleConfig
+    public static class BundleConfig
     {
         /// <summary>
         /// Registers the bundles.

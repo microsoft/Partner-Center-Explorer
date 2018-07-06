@@ -23,7 +23,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     /// <summary>
     /// Control invoice related operations.
     /// </summary>
-    [AuthorizationFilter(Roles = UserRole.Partner)]
+    [AuthorizationFilter(Roles = UserRoles.Partner)]
     public class InvoicesController : BaseController
     {
         /// <summary>
@@ -50,10 +50,10 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
             customerName.AssertNotEmpty(nameof(customerName));
             invoiceId.AssertNotEmpty(nameof(invoiceId));
 
-            InvoiceDetailsModel invoiceDetailsModel = new InvoiceDetailsModel()
-            {
-                InvoiceLineItems = await GetInvoiceLineItemsAsync(invoiceId, customerName, "Azure").ConfigureAwait(false)
-            };
+            InvoiceDetailsModel invoiceDetailsModel = new InvoiceDetailsModel();
+
+            invoiceDetailsModel.InvoiceLineItems.AddRange(
+                await GetInvoiceLineItemsAsync(invoiceId, customerName, "Azure").ConfigureAwait(false));
 
             return PartialView(invoiceDetailsModel);
         }
@@ -64,10 +64,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// <returns>A view containing the InvoicesModel model.</returns>
         public async Task<ActionResult> Index()
         {
-            InvoicesModel invoicesModel = new InvoicesModel()
-            {
-                Invoices = await Provider.PartnerOperations.GetInvoicesAsync().ConfigureAwait(false)
-            };
+            InvoicesModel invoicesModel = new InvoicesModel();
+
+            invoicesModel.Invoices.AddRange(await Provider.PartnerOperations.GetInvoicesAsync().ConfigureAwait(false));
 
             return View(invoicesModel);
         }
@@ -196,10 +195,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
             customerName.AssertNotEmpty(nameof(customerName));
             invoiceId.AssertNotEmpty(nameof(invoiceId));
 
-            InvoiceDetailsModel invoiceDetailsModel = new InvoiceDetailsModel()
-            {
-                InvoiceLineItems = await GetInvoiceLineItemsAsync(invoiceId, customerName, "Office").ConfigureAwait(false)
-            };
+            InvoiceDetailsModel invoiceDetailsModel = new InvoiceDetailsModel();
+
+            invoiceDetailsModel.InvoiceLineItems.AddRange(
+                await GetInvoiceLineItemsAsync(invoiceId, customerName, "Office").ConfigureAwait(false));
+
 
             return PartialView(invoiceDetailsModel);
         }
@@ -237,8 +237,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                 foreach (InvoiceDetail detail in invoice.InvoiceDetails)
                 {
                     data = await Provider.PartnerOperations.GetInvoiceLineItemsAsync(
-                        invoiceId, 
-                        detail.BillingProvider, 
+                        invoiceId,
+                        detail.BillingProvider,
                         detail.InvoiceLineItemType).ConfigureAwait(false);
 
                     lineItems.AddRange(data);

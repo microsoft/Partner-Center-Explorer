@@ -6,6 +6,7 @@
 
 namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 {
+    using System;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -20,6 +21,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// <param name="requestUri">The Uri where the request should be sent.</param>
         /// <param name="token">The access token value used to authorize the request.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        Task<T> GetAsync<T>(string requestUri, string token);
+        Task<T> GetAsync<T>(Uri requestUri, string token);
     }
 }

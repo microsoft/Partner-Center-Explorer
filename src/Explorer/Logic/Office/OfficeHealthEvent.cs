@@ -15,6 +15,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Office
     public class OfficeHealthEvent : IHealthEvent
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="OfficeHealthEvent" /> class.
+        /// </summary>
+        public OfficeHealthEvent()
+        {
+            IncidentIds = new List<string>();
+        }
+
+        /// <summary>
         /// Gets or sets the identifier.
         /// </summary>
         public string Id { get; set; }
@@ -27,7 +35,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Office
         /// <summary>
         /// Gets or sets a list of incidents.
         /// </summary>
-        public List<string> IncidentIds { get; set; }
+        public List<string> IncidentIds { get; }
 
         /// <summary>
         /// Gets or sets the status of the <see cref="IHealthEvent" />.

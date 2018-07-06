@@ -6,6 +6,7 @@
 
 namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Office
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
@@ -56,13 +57,13 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Office
         public async Task<List<IHealthEvent>> GetCurrentStatusAsync(string customerId)
         {
             Result<OfficeHealthEvent> records;
-            string requestUri;
+            Uri requestUri;
 
             customerId.AssertNotEmpty(nameof(customerId));
 
             try
             {
-                requestUri = $"{provider.Configuration.OfficeManagementEndpoint}/api/v1.0/{customerId}/ServiceComms/CurrentStatus";
+                requestUri = new Uri($"{provider.Configuration.OfficeManagementEndpoint}/api/v1.0/{customerId}/ServiceComms/CurrentStatus");
 
                 records = await provider.Communication.GetAsync<Result<OfficeHealthEvent>>(
                     requestUri,

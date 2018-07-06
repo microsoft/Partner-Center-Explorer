@@ -15,9 +15,18 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
     public class InvoiceDetailsModel
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="InvoiceDetailsModel" /> class.
+        /// </summary>
+        public InvoiceDetailsModel()
+        {
+            Customers = new List<string>();
+            InvoiceLineItems = new List<InvoiceLineItem>();
+        }
+
+        /// <summary>
         /// Gets or sets the customers.
         /// </summary>
-        public List<string> Customers { get; set; }
+        public List<string> Customers { get; }
 
         /// <summary>
         /// Gets or sets the invoice identifier.
@@ -27,6 +36,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
         /// <summary>
         /// Gets or sets the invoice line items.
         /// </summary>
-        public List<InvoiceLineItem> InvoiceLineItems { get; set; }
+        public List<InvoiceLineItem> InvoiceLineItems { get; }
     }
 }

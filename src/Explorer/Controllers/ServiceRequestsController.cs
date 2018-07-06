@@ -19,7 +19,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     /// <summary>
     /// Handles all request for Service Requests views.
     /// </summary>
-    [AuthorizationFilter(Roles = UserRole.Partner)]
+    [AuthorizationFilter(Roles = UserRoles.Partner)]
     public class ServiceRequestsController : BaseController
     {
         /// <summary>
@@ -47,10 +47,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// <returns>The HTML template for the list view.</returns>
         public async Task<PartialViewResult> List()
         {
-            ServiceRequestsModel serviceRequestsModel = new ServiceRequestsModel()
-            {
-                ServiceRequests = await GetServiceRequestsAsync().ConfigureAwait(false)
-            };
+            ServiceRequestsModel serviceRequestsModel = new ServiceRequestsModel();
+
+            serviceRequestsModel.ServiceRequests.AddRange(await GetServiceRequestsAsync().ConfigureAwait(false));
 
             return PartialView(serviceRequestsModel);
         }

@@ -118,10 +118,12 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                         }));
                     }
 
-                    if (customerId.Equals(provider.Configuration.PartnerCenterApplicationTenantId))
+                    if (customerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase))
                     {
                         groups = directoryGroups.CurrentPage.OfType<Group>().Where(
-                            g => g.DisplayName.Equals("AdminAgents") || g.DisplayName.Equals("HelpdeskAgents") || g.DisplayName.Equals("SalesAgent")).ToList();
+                            g => g.DisplayName.Equals("AdminAgents", StringComparison.InvariantCultureIgnoreCase) 
+                                || g.DisplayName.Equals("HelpdeskAgents", StringComparison.InvariantCultureIgnoreCase) 
+                                || g.DisplayName.Equals("SalesAgent", StringComparison.InvariantCultureIgnoreCase)).ToList();
 
                         if (groups.Count > 0)
                         {

@@ -8,8 +8,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 {
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net;
-    using System.Net.Http;
     using System.Threading.Tasks;
     using System.Web.Mvc;
     using Logic;
@@ -22,7 +20,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     /// <summary>
     /// Controller for all Customers views.
     /// </summary>
-    [AuthorizationFilter(Roles = UserRole.Partner)]
+    [AuthorizationFilter(Roles = UserRoles.Partner)]
     public class CustomersController : BaseController
     {
         /// <summary>
@@ -31,27 +29,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// <param name="service">Provides access to core services.</param>
         public CustomersController(IExplorerProvider provider) : base(provider)
         {
-        }
-
-        /// <summary>
-        /// Deletes the specified customer.
-        /// </summary>
-        /// <param name="customerId">The customer identifier.</param>
-        /// <returns>Returns the NoContent HTTP status code.</returns>
-        /// <exception cref="ArgumentException">
-        /// <paramref name="customerId"/> is empty or null.
-        /// </exception>
-        [HttpDelete]
-        public async Task<HttpResponseMessage> Delete(string customerId)
-        {
-            customerId.AssertNotEmpty(nameof(customerId));
-
-            if (Provider.Configuration.IsIntegrationSandbox)
-            {
-                await Provider.PartnerOperations.DeleteCustomerAsync(customerId).ConfigureAwait(false);
-            }
-
-            return new HttpResponseMessage(HttpStatusCode.NoContent);
         }
 
         /// <summary>
@@ -130,11 +107,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// <returns>The HTML template for the list page.</returns>
         public async Task<ActionResult> List()
         {
-            CustomersModel customersModel = new CustomersModel()
-            {
-                Customers = await GetCustomerModelsAsync().ConfigureAwait(false),
-                IsSandboxEnvironment = Provider.Configuration.IsIntegrationSandbox
-            };
+            CustomersModel customersModel = new CustomersModel();
+
+            customersModel.Customers.AddRange(await GetCustomerModelsAsync().ConfigureAwait(false));
 
             return PartialView(customersModel);
         }

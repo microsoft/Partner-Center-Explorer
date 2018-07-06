@@ -18,7 +18,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     /// <summary>
     /// Controller for all Domain views.
     /// </summary>
-    [AuthorizationFilter(Roles = UserRole.Partner)]
+    [AuthorizationFilter(Roles = UserRoles.Partner)]
     public class DomainsController : BaseController
     {
         /// <summary>
@@ -36,15 +36,19 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         /// <returns>A collection of service configuration records for the specified domain in JSON.</returns>
         public async Task<PartialViewResult> ConfigurationRecords(string customerId, string domain)
         {
+            ConfigurationRecordsModel configurationRecords;
             GraphClient client;
             List<DomainDnsRecord> records;
 
             try
             {
                 client = new GraphClient(Provider, customerId);
+                configurationRecords = new ConfigurationRecordsModel();
                 records = await client.GetDomainConfigurationRecordsAsync(domain).ConfigureAwait(false);
 
-                return PartialView(new ConfigurationRecordsModel { ServiceConfigurationRecords = records });
+                configurationRecords.ServiceConfigurationRecords.AddRange(records);
+
+                return PartialView(configurationRecords);
             }
             finally
             {

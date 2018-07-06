@@ -15,14 +15,22 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Office
     public class StatusDetails
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="StatusDetails" /> class.
+        /// </summary>
+        public StatusDetails()
+        {
+            IncidentIds = new List<string>();
+        }
+
+        /// <summary>
         /// Gets or sets the identifier.
         /// </summary>
         public string Id { get; set; }
 
         /// <summary>
-        /// Gets or sets the incident identifiers associated with this status.
+        /// Gets the incident identifiers associated with this status.
         /// </summary>
-        public List<string> IncidentIds { get; set; }
+        public List<string> IncidentIds { get; }
 
         /// <summary>
         /// Gets or sets the status.
