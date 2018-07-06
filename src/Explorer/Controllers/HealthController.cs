@@ -22,7 +22,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     /// <summary>
     /// Handles request for the Health views.
     /// </summary>
-    [AuthorizationFilter(Roles = UserRole.Partner)]
+    [AuthorizationFilter(Roles = UserRoles.Partner)]
     public class HealthController : BaseController
     {
         /// <summary>
@@ -47,6 +47,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
         public async Task<ActionResult> Index(string customerId, string subscriptionId)
         {
             Customer customer;
+            List<IHealthEvent> events;
             SubscriptionHealthModel healthModel;
             Subscription subscription;
 
@@ -69,12 +70,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
                 if (subscription.BillingType == BillingType.Usage)
                 {
-                    healthModel.HealthEvents = await GetAzureSubscriptionHealthAsync(customerId, subscriptionId);
+                    events = await GetAzureSubscriptionHealthAsync(customerId, subscriptionId).ConfigureAwait(false);
                 }
                 else
                 {
-                    healthModel.HealthEvents = await GetOfficeSubscriptionHealthAsync(customerId).ConfigureAwait(false);
+                    events = await GetOfficeSubscriptionHealthAsync(customerId).ConfigureAwait(false);
                 }
+
+                healthModel.HealthEvents.AddRange(events);
 
                 return View(healthModel.ViewModel, healthModel);
             }

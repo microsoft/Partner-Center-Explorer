@@ -14,8 +14,16 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
     public class SubscriptionsModel
     {
         /// <summary>
-        /// Gets or sets the list of subscriptions owned by the customer.
+        /// Initializes a new instance of the <see cref="SubscriptionsModel" /> class.
         /// </summary>
-        public List<SubscriptionModel> Subscriptions { get; set; }
+        public SubscriptionsModel()
+        {
+            Subscriptions = new List<SubscriptionModel>();
+        }
+
+        /// <summary>
+        /// Gets the list of subscriptions owned by the customer.
+        /// </summary>
+        public List<SubscriptionModel> Subscriptions { get; }
     }
 }

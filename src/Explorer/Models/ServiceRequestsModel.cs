@@ -14,8 +14,16 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
     public class ServiceRequestsModel
     {
         /// <summary>
-        /// Gets or sets the service requests.
+        /// Initializes a new instance of the <see cref="ServiceRequestsModel" /> class.
         /// </summary>
-        public List<ServiceRequestModel> ServiceRequests { get; set; }
+        public ServiceRequestsModel()
+        {
+            ServiceRequests = new List<ServiceRequestModel>();
+        }
+
+        /// <summary>
+        /// Gets the service requests.
+        /// </summary>
+        public List<ServiceRequestModel> ServiceRequests { get; }
     }
 }

@@ -6,6 +6,7 @@
 
 namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 {
+    using System;
     using System.Net.Http;
     using System.Net.Http.Headers;
     using System.Threading.Tasks;
@@ -38,11 +39,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
         /// <paramref name="token"/> is empty or null.
         /// </exception>
         /// <exception cref="CommunicationException"></exception>
-        public async Task<T> GetAsync<T>(string requestUri, string token)
+        public async Task<T> GetAsync<T>(Uri requestUri, string token)
         {
             HttpResponseMessage response;
 
-            requestUri.AssertNotEmpty(nameof(requestUri));
+            requestUri.AssertNotNull(nameof(requestUri));
             token.AssertNotEmpty(nameof(token));
 
             try

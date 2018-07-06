@@ -12,7 +12,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer
     /// <summary>
     /// Configures routing for the application.
     /// </summary>
-    public class RouteConfig
+    public static class RouteConfig
     {
         /// <summary>
         /// Registers the routes for the application.

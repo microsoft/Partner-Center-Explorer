@@ -81,7 +81,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
         /// or
         /// <paramref name="templateUri"/> is empty or null.
         /// </exception>
-        public async Task<string> ApplyTemplateAsync(string subscriptionId, string resourceGroupName, string templateUri, string parametersUri)
+        public async Task<string> ApplyTemplateAsync(string subscriptionId, string resourceGroupName, Uri templateUri, Uri parametersUri)
         {
             Deployment deployment;
             DeploymentExtended result;
@@ -89,7 +89,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
 
             subscriptionId.AssertNotEmpty(nameof(subscriptionId));
             resourceGroupName.AssertNotEmpty(nameof(resourceGroupName));
-            templateUri.AssertNotEmpty(nameof(templateUri));
 
             try
             {
@@ -100,13 +99,13 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
                     Properties = new DeploymentProperties()
                     {
                         Mode = DeploymentMode.Incremental,
-                        TemplateLink = new TemplateLink(templateUri)
+                        TemplateLink = new TemplateLink(templateUri.ToString())
                     }
                 };
 
-                if (!string.IsNullOrEmpty(parametersUri))
+                if (parametersUri != null)
                 {
-                    deployment.Properties.ParametersLink = new ParametersLink(parametersUri);
+                    deployment.Properties.ParametersLink = new ParametersLink(parametersUri.ToString());
                 }
 
                 deploymentName = Guid.NewGuid().ToString();

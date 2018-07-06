@@ -15,6 +15,14 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
     public class SubscriptionHealthModel
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="SubscriptionHealthModel" /> class.
+        /// </summary>
+        public SubscriptionHealthModel()
+        {
+            HealthEvents = new List<IHealthEvent>();
+        }
+
+        /// <summary>
         /// Gets or sets the name of the company.
         /// </summary>
         public string CompanyName { get; set; }
@@ -32,7 +40,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
         /// <summary>
         /// Gets or sets the health events.
         /// </summary>
-        public List<IHealthEvent> HealthEvents { get; set; }
+        public List<IHealthEvent> HealthEvents { get; }
 
         /// <summary>
         /// Gets or sets the subscription identifier.

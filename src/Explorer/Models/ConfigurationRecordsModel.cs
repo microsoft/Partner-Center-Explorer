@@ -15,8 +15,16 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
     public class ConfigurationRecordsModel
     {
         /// <summary>
-        /// Gets or sets the service configuration records.
+        /// Initializes a new instance of the <see cref="ConfigurationRecordsModel" /> class.
         /// </summary>
-        public List<DomainDnsRecord> ServiceConfigurationRecords { get; set; }
+        public ConfigurationRecordsModel()
+        {
+            ServiceConfigurationRecords = new List<DomainDnsRecord>();
+        }
+
+        /// <summary>
+        /// Gets the service configuration records.
+        /// </summary>
+        public List<DomainDnsRecord> ServiceConfigurationRecords { get; }
     }
 }

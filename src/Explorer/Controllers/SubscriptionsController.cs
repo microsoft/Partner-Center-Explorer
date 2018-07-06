@@ -24,7 +24,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     /// <summary>
     /// Handles request for the Subscriptions views.
     /// </summary>
-    [AuthorizationFilter(Roles = UserRole.Partner)]
+    [AuthorizationFilter(Roles = UserRoles.Partner)]
     public class SubscriptionsController : BaseController
     {
         /// <summary>
@@ -213,10 +213,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
             try
             {
                 subscriptions = await Provider.PartnerOperations.GetSubscriptionsAsync(customerId).ConfigureAwait(false);
-                subscriptionsModel = new SubscriptionsModel()
-                {
-                    Subscriptions = new List<SubscriptionModel>()
-                };
+                subscriptionsModel = new SubscriptionsModel();
 
                 foreach (Subscription s in subscriptions.Where(x => x.Status != SubscriptionStatus.Deleted))
                 {

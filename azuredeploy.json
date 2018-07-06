@@ -64,17 +64,23 @@
         "description": "The size of the new Azure Redis Cache instance."
       }
     },
+    "partnerCenterAccountId": {
+      "type": "string",
+      "metadata": {
+        "description": "Account identifier value from the Azure AD application configured to access the Partner Center API."
+      }
+    },
     "partnerCenterApplicationId": {
       "type": "string",
-      "minLength": 1
+      "metadata": {
+        "description": "Application identifier value from the Azure AD application configured to access the Partner Center API."
+      }
     },
     "partnerCenterApplicationSecret": {
-      "type": "string",
-      "minLength": 1
-    },
-    "partnerCenterApplicationTenantId": {
-      "type": "string",
-      "minLength": 1
+      "type": "securestring",
+      "metadata": {
+        "description": "Secret key for the Azure AD application configured to access the Partner Center API."
+      }
     },
     "repoUrl": {
       "type": "string",
@@ -220,8 +226,8 @@
             "ApplicationTenantId": "[parameters('applicationTenantId')]",
             "KeyVaultEndpoint": "[concat('https://', variables('keyVaultName'), '.vault.azure.net')]",
             "InstrumentationKey": "[reference(concat('Microsoft.Insights/components/', parameters('webSiteName'))).InstrumentationKey]",
-            "PartnerCenterApplicationId": "[parameters('partnerCenterApplicationId')]",
-            "PartnerCenterApplicationTenantId": "[parameters('partnerCenterApplicationTenantId')]"
+            "PartnerCenterAccountId": "[parameters('partnerCenterAccountId')]",
+            "PartnerCenterApplicationId": "[parameters('partnerCenterApplicationId')]"
           }
         }
       ]

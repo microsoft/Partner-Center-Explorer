@@ -15,9 +15,18 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
     public class NewSubscriptionModel
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="NewSubscriptionModel" /> class.
+        /// </summary>
+        public NewSubscriptionModel()
+        {
+            AvailableOffers = new List<OfferModel>();
+            LineItems = new List<OrderLineItem>();
+        }
+        
+        /// <summary>
         /// Gets or sets the collection available offers.
         /// </summary>
-        public List<OfferModel> AvailableOffers { get; set; }
+        public List<OfferModel> AvailableOffers { get; }
 
         /// <summary>
         /// Gets or sets the customer identifier.
@@ -27,6 +36,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
         /// <summary>
         /// Gets or sets the order line items.
         /// </summary>
-        public List<OrderLineItem> LineItems { get; set; }
+        public List<OrderLineItem> LineItems { get; }
     }
 }

@@ -15,8 +15,16 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
     public class InvoicesModel
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="InvoicesModel" /> class.
+        /// </summary>
+        public InvoicesModel()
+        {
+            Invoices = new List<Invoice>(); 
+        }
+
+        /// <summary>
         /// Gets or sets the invoices.
         /// </summary>
-        public List<Invoice> Invoices { get; set; }
+        public List<Invoice> Invoices { get; }
     }
 }

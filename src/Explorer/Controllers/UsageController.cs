@@ -19,7 +19,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     /// <summary>
     /// Controller for all Usage views.
     /// </summary>
-    [AuthorizationFilter(Roles = UserRole.Partner)]
+    [AuthorizationFilter(Roles = UserRoles.Partner)]
     public class UsageController : BaseController
     {
         /// <summary>
@@ -60,9 +60,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                     CustomerId = customerId,
                     SubscriptionId = subscriptionId,
                     SubscriptionFriendlyName = subscription.FriendlyName,
-                    Usage = await Provider.PartnerOperations
-                        .GetSubscriptionUsageAsync(customerId, subscriptionId, DateTime.Now.AddMonths(-1), DateTime.Now).ConfigureAwait(false)
                 };
+
+                usageModel.Usage.AddRange(await Provider.PartnerOperations
+                        .GetSubscriptionUsageAsync(customerId, subscriptionId, DateTime.Now.AddMonths(-1), DateTime.Now)
+                        .ConfigureAwait(false));
 
                 return View(usageModel);
             }

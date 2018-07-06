@@ -24,7 +24,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
     /// <summary>
     /// Controller for Users views.
     /// </summary>
-    [AuthorizationFilter(Roles = UserRole.Partner)]
+    [AuthorizationFilter(Roles = UserRoles.Partner)]
     public class UsersController : BaseController
     {
         /// <summary>
@@ -90,8 +90,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                 UsersModel usersModel = new UsersModel()
                 {
                     CustomerId = newUserModel.CustomerId,
-                    Users = await client.GetUsersAsync().ConfigureAwait(false)
                 };
+
+                usersModel.Users.AddRange(await client.GetUsersAsync().ConfigureAwait(false));
 
                 return PartialView("List", usersModel);
             }
@@ -154,11 +155,12 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                     DisplayName = customerUser.DisplayName,
                     FirstName = customerUser.FirstName,
                     LastName = customerUser.LastName,
-                    Licenses = await GetLicenses(customerId, userId),
                     UsageLocation = "US",
                     UserId = userId,
                     UserPrincipalName = customerUser.UserPrincipalName
                 };
+
+                editUserModel.Licenses.AddRange(await GetLicenses(customerId, userId).ConfigureAwait(false));
 
                 return PartialView(editUserModel);
             }
@@ -202,8 +204,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                 UsersModel usersModel = new UsersModel()
                 {
                     CustomerId = editUserModel.CustomerId,
-                    Users = await client.GetUsersAsync().ConfigureAwait(false)
                 };
+
+                usersModel.Users.AddRange(await client.GetUsersAsync().ConfigureAwait(false));
 
                 return PartialView("List", usersModel);
             }
@@ -235,8 +238,9 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                 UsersModel usersModel = new UsersModel()
                 {
                     CustomerId = customerId,
-                    Users = await client.GetUsersAsync().ConfigureAwait(false)
                 };
+
+                usersModel.Users.AddRange(await client.GetUsersAsync().ConfigureAwait(false));
 
                 return PartialView(usersModel);
             }
@@ -276,7 +280,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                         ConsumedUnits = sku.ConsumedUnits,
                         Id = sku.ProductSku.Id,
                         IsAssigned = licenses.Items
-                            .SingleOrDefault(x => x.ProductSku.Name.Equals(sku.ProductSku.Name)) != null ? true : false,
+                            .SingleOrDefault(x => x.ProductSku.Name.Equals(sku.ProductSku.Name, StringComparison.InvariantCultureIgnoreCase)) != null ? true : false,
                         Name = sku.ProductSku.Name,
                         SkuPartNumber = sku.ProductSku.SkuPartNumber,
                         TargetType = sku.ProductSku.TargetType,
@@ -327,7 +331,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
 
                     if (!item.IsAssigned && license.IsAssigned)
                     {
-                        assignments.Add(new LicenseAssignment() { ExcludedPlans = null, SkuId = license.Id });
+                        assignments.Add(new LicenseAssignment { ExcludedPlans = null, SkuId = license.Id });
                     }
                     else if (item.IsAssigned && !license.IsAssigned)
                     {
