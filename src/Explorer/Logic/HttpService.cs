@@ -48,12 +48,12 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
 
             try
             {
-                using (HttpClient client = new HttpClient())
+                using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, requestUri))
                 {
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                    response = await client.GetAsync(requestUri).ConfigureAwait(false);
+                    response = await client.SendAsync(request).ConfigureAwait(false);
 
                     if (!response.IsSuccessStatusCode)
                     {

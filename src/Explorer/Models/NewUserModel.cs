@@ -48,7 +48,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
         /// <summary>
         /// Gets the usage location.
         /// </summary>
-        public string UsageLocation => "US";
+        [Required]
+        public string UsageLocation { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the user principal.

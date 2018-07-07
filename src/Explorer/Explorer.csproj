@@ -312,6 +312,7 @@
     <Compile Include="App_Start\UnityConfig.cs" />
     <Compile Include="App_Start\UnityMvcActivator.cs" />
     <Compile Include="Controllers\OfferController.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Logic\IPartnerOperations.cs" />
     <Compile Include="Logic\PartnerOperations.cs" />
     <Compile Include="Logic\TelemetryHandleErrorAttribute.cs" />
@@ -382,7 +383,7 @@
     </Compile>
     <Compile Include="Logic\Azure\AzureHealthEvent.cs" />
     <Compile Include="Logic\Azure\IncidentEvent.cs" />
-    <Compile Include="Logic\Azure\ResourceManager.cs" />
+    <Compile Include="Logic\Azure\AzureManagement.cs" />
     <Compile Include="Logic\HttpService.cs" />
     <Compile Include="Logic\CommunicationException.cs" />
     <Compile Include="Logic\Extensions.cs" />
@@ -477,6 +478,7 @@
     <Content Include="Content\bootstrap-theme.min.css.map" />
     <Content Include="Content\bootstrap-theme.css.map" />
     <None Include="packages.config" />
+    <None Include="Properties\PublishProfiles\partnercenterexplorer - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-2.2.3.intellisense.js" />
     <Content Include="Scripts\ai.0.22.9-build00167.js" />
     <Content Include="Scripts\ai.0.22.9-build00167.min.js" />

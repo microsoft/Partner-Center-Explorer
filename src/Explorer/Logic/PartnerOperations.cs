@@ -294,7 +294,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 executionTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await GetAppOperationsAsync(correlationId).ConfigureAwait(false);
+                operations = await GetUserOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
@@ -420,7 +420,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             {
                 startTime = DateTime.Now;
                 correlationId = Guid.NewGuid();
-                operations = await GetAppOperationsAsync(correlationId).ConfigureAwait(false);
+                operations = await GetUserOperationsAsync(correlationId).ConfigureAwait(false);
 
                 principal = new CustomerPrincipal(ClaimsPrincipal.Current);
 
