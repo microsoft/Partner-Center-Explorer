@@ -12,7 +12,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Models
     /// Represents an access token used to access Partner Center.
     /// </summary>
     /// <seealso cref="IPartnerCredentials" />
-    internal sealed class PartnerCenterToken : IPartnerCredentials
+    public sealed class PartnerCenterToken : IPartnerCredentials
     {
         /// <summary>
         /// Gets the expiry time in UTC for the token.

@@ -13,8 +13,16 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Office
     /// Represents a result from the Service Communication API.
     /// </summary>
     /// <typeparam name="T">Type return from the Service Communication API.</typeparam>
-    internal class Result<T>
+    public class Result<T>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Result{T}" /> class.
+        /// </summary>
+        public Result()
+        {
+            Value = new List<T>();
+        }
+
         /// <summary>
         /// Gets or sets the OData context.
         /// </summary>
@@ -24,6 +32,6 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Office
         /// <summary>
         /// Gets or sets the value returned from the API.
         /// </summary>
-        public List<T> Value { get; set; }
+        public List<T> Value { get; }
     }
 }

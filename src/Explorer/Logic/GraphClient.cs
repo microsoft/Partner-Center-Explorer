@@ -9,6 +9,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net.Http;
     using System.Threading.Tasks;
     using Graph;
     using Models;
@@ -21,6 +22,11 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
     /// <seealso cref="IGraphClient" />
     public class GraphClient : IGraphClient
     {
+        /// <summary>
+        /// Static instance of the <see cref="HttpProvider" /> class.
+        /// </summary>
+        private static HttpProvider httpProvider = new HttpProvider(new HttpClientHandler(), false);
+
         /// <summary>
         /// Provides access to core services.
         /// </summary>
@@ -55,7 +61,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
             this.customerId = customerId;
             this.provider = provider;
 
-            client = new GraphServiceClient(new AuthenticationProvider(this.provider, customerId));
+            client = new GraphServiceClient(new AuthenticationProvider(this.provider, customerId), httpProvider);
         }
 
         /// <summary>
@@ -121,8 +127,8 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic
                     if (customerId.Equals(provider.Configuration.PartnerCenterAccountId, StringComparison.InvariantCultureIgnoreCase))
                     {
                         groups = directoryGroups.CurrentPage.OfType<Group>().Where(
-                            g => g.DisplayName.Equals("AdminAgents", StringComparison.InvariantCultureIgnoreCase) 
-                                || g.DisplayName.Equals("HelpdeskAgents", StringComparison.InvariantCultureIgnoreCase) 
+                            g => g.DisplayName.Equals("AdminAgents", StringComparison.InvariantCultureIgnoreCase)
+                                || g.DisplayName.Equals("HelpdeskAgents", StringComparison.InvariantCultureIgnoreCase)
                                 || g.DisplayName.Equals("SalesAgent", StringComparison.InvariantCultureIgnoreCase)).ToList();
 
                         if (groups.Count > 0)

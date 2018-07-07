@@ -167,7 +167,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                 token = await GetAccessTokenAsync(
                     $"{Provider.Configuration.ActiveDirectoryEndpoint}/{model.CustomerId}").ConfigureAwait(false);
 
-                using (ResourceManager manager = new ResourceManager(Provider, token.AccessToken))
+                using (AzureManagement manager = new AzureManagement(Provider, token.AccessToken))
                 {
                     await manager.ApplyTemplateAsync(
                         model.SubscriptionId,
@@ -215,7 +215,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                 token = await GetAccessTokenAsync(
                     $"{Provider.Configuration.ActiveDirectoryEndpoint}/{customerId}").ConfigureAwait(false);
 
-                using (ResourceManager manager = new ResourceManager(Provider, token.AccessToken))
+                using (AzureManagement manager = new AzureManagement(Provider, token.AccessToken))
                 {
                     groups = await manager.GetResourceGroupsAsync(subscriptionId).ConfigureAwait(false);
                     return Json(groups, JsonRequestBehavior.AllowGet);
@@ -249,7 +249,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Controllers
                 token = await GetAccessTokenAsync(
                   $"{Provider.Configuration.ActiveDirectoryEndpoint}/{customerId}").ConfigureAwait(false);
 
-                using (ResourceManager manager = new ResourceManager(Provider, token.AccessToken))
+                using (AzureManagement manager = new AzureManagement(Provider, token.AccessToken))
                 {
                     deployments = await manager.GetDeploymentsAsync(subscriptionId, resourceGroupName).ConfigureAwait(false);
 

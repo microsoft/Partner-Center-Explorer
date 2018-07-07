@@ -1,5 +1,5 @@
 ﻿// -----------------------------------------------------------------------
-// <copyright file="ResourceManager.cs" company="Microsoft">
+// <copyright file="AzureManagement.cs" company="Microsoft">
 //     Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
 // -----------------------------------------------------------------------
@@ -20,7 +20,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
     /// Facilitates interactions with the Azure Resource Manager API.
     /// </summary>
     /// <seealso cref="System.IDisposable" />
-    public class ResourceManager : IDisposable
+    public class AzureManagement : IDisposable
     {
         /// <summary>
         /// Provides access to core services.
@@ -38,7 +38,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
         private bool disposed;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ResourceManager"/> class.
+        /// Initializes a new instance of the <see cref="AzureManagement"/> class.
         /// </summary>
         /// <param name="provider">Provides access to core services.</param>
         /// <param name="token">A valid JSON Web Token (JWT).</param>
@@ -48,7 +48,7 @@ namespace Microsoft.Store.PartnerCenter.Explorer.Logic.Azure
         /// <exception cref="ArgumentNullException">
         /// <paramref name="provider"/> is null.
         /// </exception>
-        public ResourceManager(IExplorerProvider provider, string token)
+        public AzureManagement(IExplorerProvider provider, string token)
         {
             provider.AssertNotNull(nameof(provider));
             token.AssertNotEmpty(nameof(token));
